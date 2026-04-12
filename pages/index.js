@@ -279,7 +279,7 @@ function PlanScreen({ sessions, initialSelected }) {
   return (
     <div style={{ padding: "0 20px 24px" }}>
       <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 800, color: C.white, margin: 0, fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1.5 }}>PLAN SEMAINE {getWeekNumber(new Date()) + 1}</h1>
+        <h1 style={{ fontSize: 24, fontWeight: 800, color: C.white, margin: 0, fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1.5 }}>PLAN SEMAINE {sessions[0]?.date ? getWeekNumber(new Date(sessions[0].date)) : getWeekNumber(new Date()) + 1}</h1>
         <p style={{ fontSize: 13, color: C.g2, margin: "4px 0 0" }}>Programme à venir</p>
       </div>
       {sessions.map((s, i) => (
@@ -532,13 +532,13 @@ function BilanScreen({ sessions, etat, bilan }) {
   const avgFC = sessions.filter(s=>s.fcMoyenne).length > 0 ? Math.round(sessions.filter(s=>s.fcMoyenne).reduce((a,s) => a + s.fcMoyenne, 0) / sessions.filter(s=>s.fcMoyenne).length) : 0;
 
   // Parse le contenu du bilan Notion en paragraphes
-  const bilanParagraphs = bilan?.contenu ? bilan.contenu.split("\n").filter(l => l.trim().length > 0) : [];
+  const bilanParagraphs = (bilan?.contenu || bilan?.bilan || "").split("\n").filter(l => l.trim().length > 0);
 
   return (
     <div style={{ padding: "0 20px 24px" }}>
       <div style={{ marginBottom: 20 }}>
         <h1 style={{ fontSize: 24, fontWeight: 800, color: C.white, margin: 0, fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1.5 }}>BILAN HEBDO</h1>
-        <p style={{ fontSize: 13, color: C.g2, margin: "4px 0 0" }}>Semaine {weekNum - 1} — Analyse IA du coach</p>
+        <p style={{ fontSize: 13, color: C.g2, margin: "4px 0 0" }}>{bilan?.titre || `Semaine ${weekNum}`} — Analyse IA du coach</p>
       </div>
 
       <div style={{ background: `linear-gradient(135deg,${C.card} 0%,#0E1A12 100%)`, borderRadius: 16, padding: 20, marginBottom: 16, border: `1px solid ${C.green}22`, display: "flex", alignItems: "center", gap: 20 }}>
@@ -826,13 +826,12 @@ export default function Home() {
         // Charger les séances de la semaine PROCHAINE (pour le plan)
         try {
           const now = new Date();
-          const day = now.getDay();
-          const nextMonday = new Date(now);
-          nextMonday.setDate(now.getDate() + (7 - ((day + 6) % 7)));
-          const nextSunday = new Date(nextMonday);
-          nextSunday.setDate(nextMonday.getDate() + 6);
-          const debut = nextMonday.toISOString().split("T")[0];
-          const fin = nextSunday.toISOString().split("T")[0];
+          const tomorrow = new Date(now);
+          tomorrow.setDate(now.getDate() + 1);
+          const debut = tomorrow.toISOString().split("T")[0];
+          const finDate = new Date(tomorrow);
+          finDate.setDate(tomorrow.getDate() + 13);
+          const fin = finDate.toISOString().split("T")[0];
           
           const resPlan = await fetch(`/api/seances?debut=${debut}&fin=${fin}`);
           const dataPlan = await resPlan.json();
