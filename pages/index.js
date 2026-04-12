@@ -290,7 +290,7 @@ function PlanScreen({ sessions, initialSelected }) {
           <div style={{ flex: 1 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <span style={{ fontSize: 11, color: C.g2, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>{s.jour}</span>
-              {i===5 && <span style={{ fontSize: 9, background: C.accent, color: "#fff", padding: "2px 6px", borderRadius: 4, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>Aujourd'hui</span>}
+              {false && <span style={{ fontSize: 9, background: C.accent, color: "#fff", padding: "2px 6px", borderRadius: 4, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>Aujourd'hui</span>}
             </div>
             <p style={{ fontSize: 15, color: C.white, fontWeight: 700, margin: "3px 0 0" }}>{s.nom}</p>
           </div>
