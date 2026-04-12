@@ -538,7 +538,7 @@ function BilanScreen({ sessions, etat, bilan }) {
     <div style={{ padding: "0 20px 24px" }}>
       <div style={{ marginBottom: 20 }}>
         <h1 style={{ fontSize: 24, fontWeight: 800, color: C.white, margin: 0, fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1.5 }}>BILAN HEBDO</h1>
-        <p style={{ fontSize: 13, color: C.g2, margin: "4px 0 0" }}>{bilan?.titre || `Semaine ${weekNum}`} — Analyse IA du coach</p>
+        <p style={{ fontSize: 13, color: C.g2, margin: "4px 0 0" }}>Bilan de la semaine écoulée</p>
       </div>
 
       <div style={{ background: `linear-gradient(135deg,${C.card} 0%,#0E1A12 100%)`, borderRadius: 16, padding: 20, marginBottom: 16, border: `1px solid ${C.green}22`, display: "flex", alignItems: "center", gap: 20 }}>
@@ -823,28 +823,26 @@ export default function Home() {
           setIsLive(true);
         }
 
-        // Charger les séances de la semaine PROCHAINE (pour le plan)
+        // Charger les séances FUTURES (pour le plan)
         try {
           const now = new Date();
-          const tomorrow = new Date(now);
-          tomorrow.setDate(now.getDate() + 1);
-          const debut = tomorrow.toISOString().split("T")[0];
-          const finDate = new Date(tomorrow);
-          finDate.setDate(tomorrow.getDate() + 13);
-          const fin = finDate.toISOString().split("T")[0];
-          
-          const resPlan = await fetch(`/api/seances?debut=${debut}&fin=${fin}`);
+          const todayStr = now.toISOString().split("T")[0];
+          const resPlan = await fetch(`/api/seances?debut=${todayStr}&fin=2030-12-31`);
           const dataPlan = await resPlan.json();
           if (dataPlan.success && dataPlan.data.length > 0) {
-            setPlanSessions(mapNotionSessions(dataPlan.data));
-          } else {
-            // Si pas de plan pour la semaine prochaine, garder la semaine en cours
-            if (data.success && data.data.length > 0) {
-              setPlanSessions(mapNotionSessions(data.data));
+            // Filtrer pour ne garder que les séances APRÈS aujourd'hui
+            const future = dataPlan.data.filter(s => s.date > todayStr);
+            if (future.length > 0) {
+              setPlanSessions(mapNotionSessions(future));
+            } else {
+              // Inclure aujourd'hui si pas de séances futures
+              setPlanSessions(mapNotionSessions(dataPlan.data));
             }
+          } else if (data.success && data.data.length > 0) {
+            setPlanSessions(mapNotionSessions(data.data));
           }
         } catch (e) {
-          console.log("Plan semaine prochaine: mode démo");
+          console.log("Plan: mode démo");
         }
 
         // Charger la nutrition
