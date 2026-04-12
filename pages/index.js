@@ -21,6 +21,26 @@ const C = {
   g3: "#3A3A42", border: "rgba(255,255,255,0.06)",
 };
 
+// Calcule le numéro de semaine ISO
+function getWeekNumber(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
+
+function getWeekRange() {
+  const now = new Date();
+  const day = now.getDay();
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - ((day + 6) % 7));
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  const mois = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+  return `${monday.getDate()} – ${sunday.getDate()} ${mois[sunday.getMonth()]} ${sunday.getFullYear()}`;
+}
+
 // ─── DONNÉES DE DÉMO ─────────────────────────────────
 // Utilisées quand Notion n'est pas encore connecté
 const DEMO_SESSIONS = [
@@ -147,7 +167,7 @@ function DashboardScreen({ sessions, nutrition, etat, onNavigate }) {
       {/* Semaine — jours cliquables */}
       <div style={{ marginBottom: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <h3 style={{ fontSize: 13, fontWeight: 700, color: C.white, margin: 0, textTransform: "uppercase", letterSpacing: 1.5 }}>Semaine 15</h3>
+          <h3 style={{ fontSize: 13, fontWeight: 700, color: C.white, margin: 0, textTransform: "uppercase", letterSpacing: 1.5 }}>Semaine {getWeekNumber(new Date())}</h3>
           <span style={{ fontSize: 11, color: C.g2 }}>{sessions.filter(s=>s.done).length}/{sessions.length} séances</span>
         </div>
         <div style={{ display: "flex", gap: 6 }}>
@@ -259,8 +279,8 @@ function PlanScreen({ sessions, initialSelected }) {
   return (
     <div style={{ padding: "0 20px 24px" }}>
       <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 800, color: C.white, margin: 0, fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1.5 }}>PLAN SEMAINE 15</h1>
-        <p style={{ fontSize: 13, color: C.g2, margin: "4px 0 0" }}>6 – 12 avril 2026</p>
+        <h1 style={{ fontSize: 24, fontWeight: 800, color: C.white, margin: 0, fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1.5 }}>PLAN SEMAINE {getWeekNumber(new Date())}</h1>
+        <p style={{ fontSize: 13, color: C.g2, margin: "4px 0 0" }}>{getWeekRange()}</p>
       </div>
       {sessions.map((s, i) => (
         <div key={i} onClick={() => setSelected(i)} style={{ background: C.card, borderRadius: 14, padding: "16px 18px", marginBottom: 8, border: `1px solid ${i===5?C.accent+"44":C.border}`, display: "flex", alignItems: "center", gap: 14, cursor: "pointer" }}>
@@ -499,28 +519,39 @@ function NutritionScreen({ nutrition }) {
 
 // ─── ÉCRAN BILAN ─────────────────────────────────────
 
-function BilanScreen({ sessions, etat }) {
+function BilanScreen({ sessions, etat, bilan }) {
   const intensities = sessions.map(s => s.intensity);
-  const maxI = Math.max(...intensities);
+  const maxI = Math.max(...intensities, 1);
+  const weekNum = getWeekNumber(new Date());
+  
+  // Stats dynamiques depuis les séances
+  const totalKm = Math.round(sessions.reduce((a,s) => a + (s.distance||0), 0) * 10) / 10;
+  const totalD = Math.round(sessions.reduce((a,s) => a + (s.denivele||0), 0));
+  const totalMin = Math.round(sessions.reduce((a,s) => a + (s.duree||0), 0));
+  const totalDuree = totalMin >= 60 ? `${Math.floor(totalMin/60)}h${String(totalMin%60).padStart(2,"0")}` : `${totalMin}min`;
+  const avgFC = sessions.filter(s=>s.fcMoyenne).length > 0 ? Math.round(sessions.filter(s=>s.fcMoyenne).reduce((a,s) => a + s.fcMoyenne, 0) / sessions.filter(s=>s.fcMoyenne).length) : 0;
+
+  // Parse le contenu du bilan Notion en paragraphes
+  const bilanParagraphs = bilan?.contenu ? bilan.contenu.split("\n").filter(l => l.trim().length > 0) : [];
 
   return (
     <div style={{ padding: "0 20px 24px" }}>
       <div style={{ marginBottom: 20 }}>
         <h1 style={{ fontSize: 24, fontWeight: 800, color: C.white, margin: 0, fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1.5 }}>BILAN HEBDO</h1>
-        <p style={{ fontSize: 13, color: C.g2, margin: "4px 0 0" }}>Semaine 14 — Analyse IA du coach</p>
+        <p style={{ fontSize: 13, color: C.g2, margin: "4px 0 0" }}>Semaine {weekNum - 1} — Analyse IA du coach</p>
       </div>
 
       <div style={{ background: `linear-gradient(135deg,${C.card} 0%,#0E1A12 100%)`, borderRadius: 16, padding: 20, marginBottom: 16, border: `1px solid ${C.green}22`, display: "flex", alignItems: "center", gap: 20 }}>
-        <CircularProgress value={78} max={100} size={72} stroke={5} color={C.green} />
+        <CircularProgress value={etat.motivation * 10 || 78} max={100} size={72} stroke={5} color={C.green} />
         <div>
-          <span style={{ fontSize: 10, color: C.green, fontWeight: 700, textTransform: "uppercase", letterSpacing: 2 }}>Score global</span>
-          <p style={{ fontSize: 28, fontWeight: 800, color: C.white, margin: "4px 0 2px", fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1 }}>78/100</p>
-          <p style={{ fontSize: 12, color: C.g1, margin: 0 }}>OK pour augmenter l'intensité</p>
+          <span style={{ fontSize: 10, color: C.green, fontWeight: 700, textTransform: "uppercase", letterSpacing: 2 }}>Score forme</span>
+          <p style={{ fontSize: 28, fontWeight: 800, color: C.white, margin: "4px 0 2px", fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1 }}>{etat.motivation * 10 || 78}/100</p>
+          <p style={{ fontSize: 12, color: C.g1, margin: 0 }}>{etat.fatigue <= 4 ? "OK pour augmenter l'intensité" : etat.fatigue <= 6 ? "Maintenir le rythme actuel" : "Semaine de décharge recommandée"}</p>
         </div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 16 }}>
-        {[ {l:"Volume",v:"48.8 km",c:C.accent,i:"🏔️"}, {l:"Dénivelé",v:"915 m D+",c:C.yellow,i:"📈"}, {l:"Durée totale",v:"7h12",c:C.blue,i:"⏱️"}, {l:"FC moyenne",v:"146 bpm",c:C.accentSoft,i:"❤️"} ].map((s,i) => (
+        {[ {l:"Volume",v:`${totalKm} km`,c:C.accent,i:"🏔️"}, {l:"Dénivelé",v:`${totalD} m D+`,c:C.yellow,i:"📈"}, {l:"Durée totale",v:totalDuree,c:C.blue,i:"⏱️"}, {l:"FC moyenne",v:avgFC ? `${avgFC} bpm` : "—",c:C.accentSoft,i:"❤️"} ].map((s,i) => (
           <div key={i} style={{ background: C.card, borderRadius: 12, padding: "14px 16px", border: `1px solid ${C.border}` }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
               <span style={{ fontSize: 14 }}>{s.i}</span>
@@ -537,14 +568,14 @@ function BilanScreen({ sessions, etat }) {
           {intensities.map((v,i) => (
             <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
               <div style={{ width: "100%", height: `${(v/maxI)*70}px`, background: v>85 ? `linear-gradient(180deg,${C.accent},${C.accent}88)` : v<30 ? `linear-gradient(180deg,${C.green},${C.green}88)` : `linear-gradient(180deg,${C.yellow},${C.yellow}88)`, borderRadius: 4, transition: "height 0.8s ease" }} />
-              <span style={{ fontSize: 9, color: C.g2, fontWeight: 600 }}>{sessions[i].jour}</span>
+              <span style={{ fontSize: 9, color: C.g2, fontWeight: 600 }}>{sessions[i]?.jour || ""}</span>
             </div>
           ))}
         </div>
       </div>
 
       <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-        {[ {l:"Fatigue",v:etat.fatigue,c:C.yellow}, {l:"Motivation",v:etat.motivation,c:C.green}, {l:"Douleurs",v:etat.douleurs,c:C.green} ].map((s,i) => (
+        {[ {l:"Fatigue",v:etat.fatigue,c:etat.fatigue<=4?C.green:etat.fatigue<=6?C.yellow:C.accent}, {l:"Motivation",v:etat.motivation,c:C.green}, {l:"Douleurs",v:etat.douleurs,c:etat.douleurs<=3?C.green:etat.douleurs<=6?C.yellow:C.accent} ].map((s,i) => (
           <div key={i} style={{ flex: 1, background: C.card, borderRadius: 12, padding: 16, border: `1px solid ${C.border}`, textAlign: "center" }}>
             <span style={{ fontSize: 10, color: C.g2, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>{s.l}</span>
             <p style={{ fontSize: 28, fontWeight: 800, color: s.c, margin: "6px 0 0", fontFamily: "'Bebas Neue',sans-serif" }}>{s.v}<span style={{ fontSize: 14, color: C.g2 }}>/10</span></p>
@@ -558,9 +589,20 @@ function BilanScreen({ sessions, etat }) {
           <span style={{ fontSize: 11, fontWeight: 700, color: C.accent, textTransform: "uppercase", letterSpacing: 1.5 }}>Analyse du coach IA</span>
         </div>
         <div style={{ fontSize: 13, color: C.g1, lineHeight: 1.7 }}>
-          <p style={{ margin: "0 0 10px" }}><strong style={{ color: C.white }}>Volume solide</strong> — 48.8 km avec 915m D+ sur 7h. La cohérence avec le plan est respectée mais le volume est élevé.</p>
-          <p style={{ margin: "0 0 10px" }}><strong style={{ color: C.white }}>Alerte FC</strong> — Moyenne de 154 bpm sur la sortie de 12 km avec ressenti "Dur". Surveiller les signes de surentraînement.</p>
-          <p style={{ margin: 0 }}><strong style={{ color: C.green }}>→ Semaine prochaine :</strong> Légère décharge, -20% volume. Ajouter une session mobilité/yoga.</p>
+          {bilanParagraphs.length > 0 ? (
+            bilanParagraphs.map((line, i) => {
+              const isTitle = line.startsWith("**") || line.startsWith("###");
+              const cleaned = line.replace(/\*\*/g, "").replace(/###\s*/g, "").trim();
+              if (isTitle) return <p key={i} style={{ margin: "12px 0 4px", color: C.white, fontWeight: 700, fontSize: 14 }}>{cleaned}</p>;
+              return <p key={i} style={{ margin: "0 0 8px" }}>{cleaned}</p>;
+            })
+          ) : (
+            <>
+              <p style={{ margin: "0 0 10px" }}><strong style={{ color: C.white }}>Volume</strong> — {totalKm} km avec {totalD}m D+ sur {totalDuree}.</p>
+              <p style={{ margin: "0 0 10px" }}><strong style={{ color: C.white }}>FC moyenne</strong> — {avgFC ? `${avgFC} bpm sur les séances réalisées.` : "Pas de données FC cette semaine."}</p>
+              <p style={{ margin: 0 }}><strong style={{ color: C.green }}>→ Connecte la base Bilan dans Notion</strong> pour voir l'analyse complète du coach IA.</p>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -615,6 +657,7 @@ export default function Home() {
   const [etat, setEtat] = useState(DEMO_ETAT);
   const [isLive, setIsLive] = useState(false);
   const [planSelected, setPlanSelected] = useState(null);
+  const [bilan, setBilan] = useState(null);
 
   // Navigation depuis l'accueil
   function handleNavigate(target, index) {
@@ -818,6 +861,17 @@ export default function Home() {
           console.log("État semaine: mode démo");
         }
 
+        // Charger le bilan
+        try {
+          const resBilan = await fetch("/api/bilan");
+          const dataBilan = await resBilan.json();
+          if (dataBilan.success && dataBilan.data) {
+            setBilan(dataBilan.data);
+          }
+        } catch (e) {
+          console.log("Bilan: mode démo");
+        }
+
       } catch (e) {
         console.log("Mode démo (Notion non connecté)");
       }
@@ -837,7 +891,7 @@ export default function Home() {
     <DashboardScreen key={0} sessions={sessions} nutrition={nutrition} etat={etat} onNavigate={handleNavigate} />,
     <PlanScreen key={1} sessions={sessions} initialSelected={planSelected} />,
     <NutritionScreen key={2} nutrition={nutrition} />,
-    <BilanScreen key={3} sessions={sessions} etat={etat} />,
+    <BilanScreen key={3} sessions={sessions} etat={etat} bilan={bilan} />,
     <ProfileScreen key={4} />,
   ];
 
