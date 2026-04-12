@@ -279,8 +279,8 @@ function PlanScreen({ sessions, initialSelected }) {
   return (
     <div style={{ padding: "0 20px 24px" }}>
       <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 800, color: C.white, margin: 0, fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1.5 }}>PLAN SEMAINE {getWeekNumber(new Date())}</h1>
-        <p style={{ fontSize: 13, color: C.g2, margin: "4px 0 0" }}>{getWeekRange()}</p>
+        <h1 style={{ fontSize: 24, fontWeight: 800, color: C.white, margin: 0, fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1.5 }}>PLAN SEMAINE {getWeekNumber(new Date()) + 1}</h1>
+        <p style={{ fontSize: 13, color: C.g2, margin: "4px 0 0" }}>Programme à venir</p>
       </div>
       {sessions.map((s, i) => (
         <div key={i} onClick={() => setSelected(i)} style={{ background: C.card, borderRadius: 14, padding: "16px 18px", marginBottom: 8, border: `1px solid ${i===5?C.accent+"44":C.border}`, display: "flex", alignItems: "center", gap: 14, cursor: "pointer" }}>
@@ -658,6 +658,7 @@ export default function Home() {
   const [isLive, setIsLive] = useState(false);
   const [planSelected, setPlanSelected] = useState(null);
   const [bilan, setBilan] = useState(null);
+  const [planSessions, setPlanSessions] = useState(DEMO_SESSIONS);
 
   // Navigation depuis l'accueil
   function handleNavigate(target, index) {
@@ -813,13 +814,38 @@ export default function Home() {
   useEffect(() => {
     async function loadData() {
       try {
-        // Charger les séances
+        // Charger les séances de la semaine en cours (pour accueil + bilan)
         const res = await fetch("/api/seances");
         const data = await res.json();
         if (data.success && data.data.length > 0) {
           const mapped = mapNotionSessions(data.data);
           setSessions(mapped);
           setIsLive(true);
+        }
+
+        // Charger les séances de la semaine PROCHAINE (pour le plan)
+        try {
+          const now = new Date();
+          const day = now.getDay();
+          const nextMonday = new Date(now);
+          nextMonday.setDate(now.getDate() + (7 - ((day + 6) % 7)));
+          const nextSunday = new Date(nextMonday);
+          nextSunday.setDate(nextMonday.getDate() + 6);
+          const debut = nextMonday.toISOString().split("T")[0];
+          const fin = nextSunday.toISOString().split("T")[0];
+          
+          const resPlan = await fetch(`/api/seances?debut=${debut}&fin=${fin}`);
+          const dataPlan = await resPlan.json();
+          if (dataPlan.success && dataPlan.data.length > 0) {
+            setPlanSessions(mapNotionSessions(dataPlan.data));
+          } else {
+            // Si pas de plan pour la semaine prochaine, garder la semaine en cours
+            if (data.success && data.data.length > 0) {
+              setPlanSessions(mapNotionSessions(data.data));
+            }
+          }
+        } catch (e) {
+          console.log("Plan semaine prochaine: mode démo");
         }
 
         // Charger la nutrition
@@ -861,7 +887,7 @@ export default function Home() {
           console.log("État semaine: mode démo");
         }
 
-        // Charger le bilan
+        // Charger le bilan du coach
         try {
           const resBilan = await fetch("/api/bilan");
           const dataBilan = await resBilan.json();
@@ -889,7 +915,7 @@ export default function Home() {
 
   const screens = [
     <DashboardScreen key={0} sessions={sessions} nutrition={nutrition} etat={etat} onNavigate={handleNavigate} />,
-    <PlanScreen key={1} sessions={sessions} initialSelected={planSelected} />,
+    <PlanScreen key={1} sessions={planSessions} initialSelected={planSelected} />,
     <NutritionScreen key={2} nutrition={nutrition} />,
     <BilanScreen key={3} sessions={sessions} etat={etat} bilan={bilan} />,
     <ProfileScreen key={4} />,
