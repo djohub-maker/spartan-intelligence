@@ -6,10 +6,10 @@
 // Elle essaie de charger les données depuis Notion.
 // Si Notion n'est pas configuré, elle affiche des données de démo.
 // ============================================
-
+ 
 import { useState, useEffect } from "react";
 import Head from "next/head";
-
+ 
 // ─── COULEURS ────────────────────────────────────────
 const C = {
   bg: "#0A0A0C", card: "#141418", accent: "#E63626",
@@ -20,7 +20,7 @@ const C = {
   white: "#F5F5F7", g1: "#B8B8BF", g2: "#6E6E78",
   g3: "#3A3A42", border: "rgba(255,255,255,0.06)",
 };
-
+ 
 // ─── DONNÉES DE DÉMO ─────────────────────────────────
 // Utilisées quand Notion n'est pas encore connecté
 const DEMO_SESSIONS = [
@@ -32,7 +32,7 @@ const DEMO_SESSIONS = [
   { jour: "Sam", nom: "Sortie Longue", type: "run", done: false, intensity: 95, duree: 122, distance: 17.0, denivele: 559, typeSeance: "SORTIE LONGUE", objectif: "Endurance", explication: "🏃 ÉCHAUFFEMENT : Intégré\n---\n💪 CORPS DE SÉANCE :\n- 2h trail endurance fondamentale\n- Terrain mixte forêt/sentier\n- Ravitaillement toutes les 45min\n---\n🧊 RETOUR AU CALME : 10 min marche + étirements" },
   { jour: "Dim", nom: "Repos actif", type: "rest", done: false, intensity: 20, duree: 60, typeSeance: "REPOS ACTIF", objectif: "Mobilité", explication: "💪 CORPS DE SÉANCE :\n- Marche 45 min + mobilité douce\n- Foam roller 15 min\n- Stretching global" },
 ];
-
+ 
 const DEMO_NUTRITION = {
   calories: 2450, proteines: 180, glucides: 250, lipides: 85,
   meals: [
@@ -47,11 +47,11 @@ const DEMO_NUTRITION = {
     { name: "Collagène", timing: "Avant coucher", icon: "🦴" },
   ],
 };
-
+ 
 const DEMO_ETAT = { fatigue: 5.5, motivation: 8, douleurs: 2 };
-
+ 
 // ─── COMPOSANTS RÉUTILISABLES ────────────────────────
-
+ 
 function MacroBar({ label, value, max, color }) {
   return (
     <div style={{ flex: 1 }}>
@@ -65,7 +65,7 @@ function MacroBar({ label, value, max, color }) {
     </div>
   );
 }
-
+ 
 function CircularProgress({ value, max, size = 52, stroke = 4, color = C.accent }) {
   const r = (size - stroke) / 2;
   const circ = 2 * Math.PI * r;
@@ -77,9 +77,9 @@ function CircularProgress({ value, max, size = 52, stroke = 4, color = C.accent 
     </svg>
   );
 }
-
+ 
 // ─── ICÔNES ──────────────────────────────────────────
-
+ 
 function Icon({ name, active }) {
   const s = active ? C.accent : C.g2;
   const icons = {
@@ -91,9 +91,9 @@ function Icon({ name, active }) {
   };
   return icons[name] || null;
 }
-
+ 
 // ─── ÉCRAN ACCUEIL ───────────────────────────────────
-
+ 
 function DashboardScreen({ sessions, nutrition, etat }) {
   const today = sessions[5];
   return (
@@ -104,7 +104,7 @@ function DashboardScreen({ sessions, nutrition, etat }) {
           PRÊT POUR LA<br/><span style={{ color: C.accent }}>SORTIE LONGUE</span> ?
         </h1>
       </div>
-
+ 
       {/* Séance du jour */}
       <div style={{ background: `linear-gradient(135deg,${C.card} 0%,#1E1215 100%)`, borderRadius: 16, padding: 20, marginBottom: 16, border: `1px solid ${C.accent}33`, position: "relative", overflow: "hidden" }}>
         <div style={{ position: "absolute", top: -20, right: -20, width: 100, height: 100, background: C.accentGlow, borderRadius: "50%", filter: "blur(40px)" }} />
@@ -129,7 +129,7 @@ function DashboardScreen({ sessions, nutrition, etat }) {
           ))}
         </div>
       </div>
-
+ 
       {/* Semaine */}
       <div style={{ marginBottom: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
@@ -145,7 +145,7 @@ function DashboardScreen({ sessions, nutrition, etat }) {
           ))}
         </div>
       </div>
-
+ 
       {/* Stats */}
       <div style={{ background: C.card, borderRadius: 16, padding: 20, border: `1px solid ${C.border}`, marginBottom: 16 }}>
         <h3 style={{ fontSize: 12, fontWeight: 700, color: C.g2, margin: "0 0 16px", textTransform: "uppercase", letterSpacing: 1.5 }}>Bilan en cours</h3>
@@ -162,7 +162,7 @@ function DashboardScreen({ sessions, nutrition, etat }) {
           ))}
         </div>
       </div>
-
+ 
       {/* Nutrition preview */}
       <div style={{ background: C.card, borderRadius: 16, padding: 20, border: `1px solid ${C.border}` }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
@@ -178,12 +178,12 @@ function DashboardScreen({ sessions, nutrition, etat }) {
     </div>
   );
 }
-
+ 
 // ─── ÉCRAN PLAN ──────────────────────────────────────
-
+ 
 function PlanScreen({ sessions }) {
   const [selected, setSelected] = useState(null);
-
+ 
   if (selected !== null) {
     const s = sessions[selected];
     return (
@@ -194,7 +194,7 @@ function PlanScreen({ sessions }) {
           <h2 style={{ fontSize: 22, fontWeight: 800, color: C.white, margin: "6px 0 4px", fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1.5 }}>{s.typeSeance}</h2>
           <p style={{ fontSize: 12, color: C.g1, margin: 0 }}>Objectif : {s.objectif}</p>
         </div>
-
+ 
         {(s.duree || s.distance || s.fcMoyenne) && (
           <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
             {s.duree && <div style={{ background: C.card, borderRadius: 10, padding: "10px 14px", border: `1px solid ${C.border}` }}><span style={{ fontSize: 9, color: C.g2, textTransform: "uppercase", letterSpacing: 1, fontWeight: 600 }}>Durée</span><p style={{ fontSize: 16, fontWeight: 700, color: C.white, margin: "2px 0 0" }}>{s.duree} min</p></div>}
@@ -203,7 +203,7 @@ function PlanScreen({ sessions }) {
             {s.fcMoyenne && <div style={{ background: C.card, borderRadius: 10, padding: "10px 14px", border: `1px solid ${C.border}` }}><span style={{ fontSize: 9, color: C.g2, textTransform: "uppercase", letterSpacing: 1, fontWeight: 600 }}>FC moy</span><p style={{ fontSize: 16, fontWeight: 700, color: C.white, margin: "2px 0 0" }}>{s.fcMoyenne} bpm</p></div>}
           </div>
         )}
-
+ 
         {s.explication && s.explication.split("---").map((block, i) => {
           const trimmed = block.trim();
           if (!trimmed) return null;
@@ -213,7 +213,7 @@ function PlanScreen({ sessions }) {
             </div>
           );
         })}
-
+ 
         {s.ressenti && (
           <div style={{ background: C.card, borderRadius: 12, padding: 16, marginTop: 8, border: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between" }}>
             <div><span style={{ fontSize: 11, fontWeight: 700, color: C.g2, textTransform: "uppercase", letterSpacing: 1 }}>Ressenti</span><p style={{ fontSize: 14, color: C.white, fontWeight: 600, margin: "2px 0 0" }}>{s.ressenti}</p></div>
@@ -223,7 +223,7 @@ function PlanScreen({ sessions }) {
       </div>
     );
   }
-
+ 
   return (
     <div style={{ padding: "0 20px 24px" }}>
       <div style={{ marginBottom: 20 }}>
@@ -251,9 +251,9 @@ function PlanScreen({ sessions }) {
     </div>
   );
 }
-
+ 
 // ─── ÉCRAN NUTRITION ─────────────────────────────────
-
+ 
 function NutritionScreen({ nutrition }) {
   return (
     <div style={{ padding: "0 20px 24px" }}>
@@ -261,7 +261,7 @@ function NutritionScreen({ nutrition }) {
         <h1 style={{ fontSize: 24, fontWeight: 800, color: C.white, margin: 0, fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1.5 }}>NUTRITION</h1>
         <p style={{ fontSize: 13, color: C.g2, margin: "4px 0 0" }}>Dimanche 12 Avril — Jour de sortie longue</p>
       </div>
-
+ 
       <div style={{ background: `linear-gradient(135deg,${C.card} 0%,#18140E 100%)`, borderRadius: 16, padding: 20, marginBottom: 16, border: `1px solid ${C.yellow}22` }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
           <div>
@@ -276,7 +276,7 @@ function NutritionScreen({ nutrition }) {
           <MacroBar label="Lipides" value={nutrition.lipides} max={100} color={C.blue} />
         </div>
       </div>
-
+ 
       {nutrition.meals.map((m, i) => (
         <div key={i} style={{ background: C.card, borderRadius: 14, padding: 18, marginBottom: 8, border: `1px solid ${C.border}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
@@ -295,7 +295,7 @@ function NutritionScreen({ nutrition }) {
           </div>
         </div>
       ))}
-
+ 
       <div style={{ background: C.card, borderRadius: 14, padding: 18, marginTop: 8, border: `1px solid ${C.border}` }}>
         <h3 style={{ fontSize: 11, fontWeight: 700, color: C.g2, margin: "0 0 14px", textTransform: "uppercase", letterSpacing: 1.5 }}>💊 Supplémentation</h3>
         {nutrition.supplements.map((s, i) => (
@@ -311,20 +311,20 @@ function NutritionScreen({ nutrition }) {
     </div>
   );
 }
-
+ 
 // ─── ÉCRAN BILAN ─────────────────────────────────────
-
+ 
 function BilanScreen({ sessions, etat }) {
   const intensities = sessions.map(s => s.intensity);
   const maxI = Math.max(...intensities);
-
+ 
   return (
     <div style={{ padding: "0 20px 24px" }}>
       <div style={{ marginBottom: 20 }}>
         <h1 style={{ fontSize: 24, fontWeight: 800, color: C.white, margin: 0, fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1.5 }}>BILAN HEBDO</h1>
         <p style={{ fontSize: 13, color: C.g2, margin: "4px 0 0" }}>Semaine 14 — Analyse IA du coach</p>
       </div>
-
+ 
       <div style={{ background: `linear-gradient(135deg,${C.card} 0%,#0E1A12 100%)`, borderRadius: 16, padding: 20, marginBottom: 16, border: `1px solid ${C.green}22`, display: "flex", alignItems: "center", gap: 20 }}>
         <CircularProgress value={78} max={100} size={72} stroke={5} color={C.green} />
         <div>
@@ -333,7 +333,7 @@ function BilanScreen({ sessions, etat }) {
           <p style={{ fontSize: 12, color: C.g1, margin: 0 }}>OK pour augmenter l'intensité</p>
         </div>
       </div>
-
+ 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 16 }}>
         {[ {l:"Volume",v:"48.8 km",c:C.accent,i:"🏔️"}, {l:"Dénivelé",v:"915 m D+",c:C.yellow,i:"📈"}, {l:"Durée totale",v:"7h12",c:C.blue,i:"⏱️"}, {l:"FC moyenne",v:"146 bpm",c:C.accentSoft,i:"❤️"} ].map((s,i) => (
           <div key={i} style={{ background: C.card, borderRadius: 12, padding: "14px 16px", border: `1px solid ${C.border}` }}>
@@ -345,7 +345,7 @@ function BilanScreen({ sessions, etat }) {
           </div>
         ))}
       </div>
-
+ 
       <div style={{ background: C.card, borderRadius: 14, padding: 18, marginBottom: 16, border: `1px solid ${C.border}` }}>
         <h3 style={{ fontSize: 11, fontWeight: 700, color: C.g2, margin: "0 0 16px", textTransform: "uppercase", letterSpacing: 1.5 }}>Charge d'intensité</h3>
         <div style={{ display: "flex", alignItems: "flex-end", gap: 6, height: 80 }}>
@@ -357,7 +357,7 @@ function BilanScreen({ sessions, etat }) {
           ))}
         </div>
       </div>
-
+ 
       <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
         {[ {l:"Fatigue",v:etat.fatigue,c:C.yellow}, {l:"Motivation",v:etat.motivation,c:C.green}, {l:"Douleurs",v:etat.douleurs,c:C.green} ].map((s,i) => (
           <div key={i} style={{ flex: 1, background: C.card, borderRadius: 12, padding: 16, border: `1px solid ${C.border}`, textAlign: "center" }}>
@@ -366,7 +366,7 @@ function BilanScreen({ sessions, etat }) {
           </div>
         ))}
       </div>
-
+ 
       <div style={{ background: C.card, borderRadius: 14, padding: 18, border: `1px solid ${C.border}` }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
           <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(230,54,38,0.12)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>🤖</div>
@@ -381,9 +381,9 @@ function BilanScreen({ sessions, etat }) {
     </div>
   );
 }
-
+ 
 // ─── ÉCRAN PROFIL ────────────────────────────────────
-
+ 
 function ProfileScreen() {
   return (
     <div style={{ padding: "0 20px 24px" }}>
@@ -392,7 +392,7 @@ function ProfileScreen() {
         <h2 style={{ fontSize: 22, fontWeight: 800, color: C.white, margin: 0, fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1 }}>GEOFFREY</h2>
         <p style={{ fontSize: 13, color: C.g2, margin: "4px 0 0" }}>Athlète OCR — Metz</p>
       </div>
-
+ 
       <div style={{ background: C.card, borderRadius: 14, padding: 18, marginBottom: 12, border: `1px solid ${C.border}` }}>
         <h3 style={{ fontSize: 11, fontWeight: 700, color: C.g2, margin: "0 0 14px", textTransform: "uppercase", letterSpacing: 1.5 }}>Profil athlète</h3>
         {[ {l:"Objectif",v:"Spartan Ultra"}, {l:"Âge",v:"41 ans"}, {l:"Expérience OCR",v:"Confirmé"}, {l:"Montre",v:"Garmin"}, {l:"Métabolisme de base",v:"1 850 kcal"} ].map((item,i) => (
@@ -402,7 +402,7 @@ function ProfileScreen() {
           </div>
         ))}
       </div>
-
+ 
       <div style={{ background: C.card, borderRadius: 14, padding: 18, marginBottom: 12, border: `1px solid ${C.border}` }}>
         <h3 style={{ fontSize: 11, fontWeight: 700, color: C.g2, margin: "0 0 14px", textTransform: "uppercase", letterSpacing: 1.5 }}>Connexions</h3>
         {[ {n:"Strava",s:"Connecté",c:C.green}, {n:"Garmin Connect",s:"Connecté",c:C.green}, {n:"Apple Health",s:"Non connecté",c:C.g2} ].map((c,i) => (
@@ -412,7 +412,7 @@ function ProfileScreen() {
           </div>
         ))}
       </div>
-
+ 
       <div style={{ background: `linear-gradient(135deg,${C.accent}15,${C.card})`, borderRadius: 14, padding: 18, border: `1px solid ${C.accent}22`, textAlign: "center" }}>
         <p style={{ fontSize: 10, color: C.accent, fontWeight: 700, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 4px" }}>Spartan Intelligence</p>
         <p style={{ fontSize: 11, color: C.g2, margin: 0 }}>v1.0 — Powered by AI</p>
@@ -420,16 +420,16 @@ function ProfileScreen() {
     </div>
   );
 }
-
+ 
 // ─── APPLICATION PRINCIPALE ──────────────────────────
-
+ 
 export default function Home() {
   const [tab, setTab] = useState(0);
   const [sessions, setSessions] = useState(DEMO_SESSIONS);
   const [nutrition, setNutrition] = useState(DEMO_NUTRITION);
   const [etat, setEtat] = useState(DEMO_ETAT);
   const [isLive, setIsLive] = useState(false);
-
+ 
   // Transforme les données Notion en format compatible avec l'UI
   function mapNotionSessions(notionData) {
     const jourMap = {
@@ -439,7 +439,7 @@ export default function Home() {
       "thursday": "Jeu", "friday": "Ven", "saturday": "Sam", "sunday": "Dim",
     };
     const typeMap = { "Run": "run", "WeightTraining": "force", "Hiking": "rest" };
-
+ 
     return notionData.map((s) => ({
       ...s,
       jour: jourMap[(s.jour || "").toLowerCase()] || s.jour || "?",
@@ -450,7 +450,7 @@ export default function Home() {
       objectif: "",
     }));
   }
-
+ 
   // Essaie de charger les données depuis Notion au démarrage
   useEffect(() => {
     async function loadData() {
@@ -468,7 +468,7 @@ export default function Home() {
     }
     loadData();
   }, []);
-
+ 
   const tabs = [
     { icon: "home", label: "Accueil" },
     { icon: "calendar", label: "Plan" },
@@ -476,7 +476,7 @@ export default function Home() {
     { icon: "chart", label: "Bilan" },
     { icon: "user", label: "Profil" },
   ];
-
+ 
   const screens = [
     <DashboardScreen key={0} sessions={sessions} nutrition={nutrition} etat={etat} />,
     <PlanScreen key={1} sessions={sessions} />,
@@ -484,7 +484,7 @@ export default function Home() {
     <BilanScreen key={3} sessions={sessions} etat={etat} />,
     <ProfileScreen key={4} />,
   ];
-
+ 
   return (
     <>
       <Head>
@@ -495,7 +495,7 @@ export default function Home() {
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <link rel="manifest" href="/manifest.json" />
       </Head>
-
+ 
       <div style={{ maxWidth: 390, margin: "0 auto", background: C.bg, minHeight: "100vh", position: "relative" }}>
         {/* Status bar */}
         <div style={{ padding: "12px 20px 8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -505,7 +505,7 @@ export default function Home() {
             {isLive && <span style={{ fontSize: 9, background: C.green+"33", color: C.green, padding: "2px 6px", borderRadius: 4, fontWeight: 700 }}>LIVE</span>}
           </div>
         </div>
-
+ 
         {/* Header */}
         <div style={{ padding: "8px 20px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -515,10 +515,10 @@ export default function Home() {
             <p style={{ fontSize: 10, color: C.g2, margin: 0, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1.5 }}>Spartan Intelligence</p>
           </div>
         </div>
-
+ 
         {/* Contenu */}
         <div style={{ paddingBottom: 80 }}>{screens[tab]}</div>
-
+ 
         {/* Barre de navigation */}
         <div style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 390, background: "rgba(10,10,12,0.92)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", borderTop: `1px solid ${C.border}`, display: "flex", justifyContent: "space-around", padding: "8px 0 24px" }}>
           {tabs.map((t, i) => (
@@ -533,7 +533,4 @@ export default function Home() {
     </>
   );
 }
-
-    </>
-  );
-}
+ 
