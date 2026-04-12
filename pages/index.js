@@ -255,43 +255,119 @@ function PlanScreen({ sessions }) {
 // ─── ÉCRAN NUTRITION ─────────────────────────────────
  
 function NutritionScreen({ nutrition }) {
+  const [selectedMeal, setSelectedMeal] = useState(null);
+ 
+  // Vue détail d'un repas
+  if (selectedMeal !== null) {
+    const m = nutrition.meals[selectedMeal];
+    return (
+      <div style={{ padding: "0 20px 24px" }}>
+        <button onClick={() => setSelectedMeal(null)} style={{ background: "none", border: "none", color: C.g2, fontSize: 13, padding: 0, marginBottom: 16, cursor: "pointer" }}>← Retour à la nutrition</button>
+ 
+        {/* Header du repas */}
+        <div style={{
+          background: `linear-gradient(135deg,${C.card} 0%,#18140E 100%)`,
+          borderRadius: 16, padding: 20, marginBottom: 16,
+          border: `1px solid ${C.yellow}33`,
+          position: "relative", overflow: "hidden",
+        }}>
+          <div style={{ position: "absolute", top: -20, right: -20, width: 80, height: 80, background: "rgba(245,166,35,0.2)", borderRadius: "50%", filter: "blur(30px)" }} />
+          <div style={{ position: "relative" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+              <span style={{ fontSize: 28 }}>{m.icon}</span>
+              <div>
+                <span style={{ fontSize: 10, color: C.yellow, fontWeight: 700, textTransform: "uppercase", letterSpacing: 2 }}>{m.titre}</span>
+                <h2 style={{ fontSize: 20, fontWeight: 800, color: C.white, margin: "4px 0 0", fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1 }}>{m.nom}</h2>
+              </div>
+            </div>
+            {(m.kcal || m.p || m.g || m.l) && (
+              <div style={{ display: "flex", gap: 16, marginTop: 12 }}>
+                {m.kcal && <span style={{ fontSize: 13, color: C.white, fontWeight: 700 }}>{m.kcal} <span style={{ color: C.g2, fontWeight: 500 }}>kcal</span></span>}
+                {m.p && <span style={{ fontSize: 13, color: C.accent, fontWeight: 600 }}>{m.p}g P</span>}
+                {m.g && <span style={{ fontSize: 13, color: C.yellow, fontWeight: 600 }}>{m.g}g G</span>}
+                {m.l && <span style={{ fontSize: 13, color: C.blue, fontWeight: 600 }}>{m.l}g L</span>}
+              </div>
+            )}
+          </div>
+        </div>
+ 
+        {/* Ingrédients */}
+        {m.ingredients && (
+          <div style={{ background: C.card, borderRadius: 14, padding: 18, marginBottom: 8, border: `1px solid ${C.border}` }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+              <span style={{ fontSize: 16 }}>🥘</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: C.g1, textTransform: "uppercase", letterSpacing: 1.5 }}>Ingrédients</span>
+            </div>
+            <p style={{ fontSize: 13, color: C.white, margin: 0, lineHeight: 1.7 }}>{m.ingredients}</p>
+          </div>
+        )}
+ 
+        {/* Recette */}
+        {m.recette && (
+          <div style={{ background: C.card, borderRadius: 14, padding: 18, marginBottom: 8, border: `1px solid ${C.border}` }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+              <span style={{ fontSize: 16 }}>👨‍🍳</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: C.g1, textTransform: "uppercase", letterSpacing: 1.5 }}>Recette</span>
+            </div>
+            <p style={{ fontSize: 13, color: C.white, margin: 0, lineHeight: 1.7, whiteSpace: "pre-line" }}>{m.recette}</p>
+          </div>
+        )}
+ 
+        {/* Contenu brut si pas de recette structurée */}
+        {!m.recette && m.contenuBrut && (
+          <div style={{ background: C.card, borderRadius: 14, padding: 18, marginBottom: 8, border: `1px solid ${C.border}` }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+              <span style={{ fontSize: 16 }}>📋</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: C.g1, textTransform: "uppercase", letterSpacing: 1.5 }}>Détail</span>
+            </div>
+            <p style={{ fontSize: 13, color: C.white, margin: 0, lineHeight: 1.7, whiteSpace: "pre-line" }}>{m.contenuBrut}</p>
+          </div>
+        )}
+      </div>
+    );
+  }
+ 
+  // Vue liste principale
   return (
     <div style={{ padding: "0 20px 24px" }}>
       <div style={{ marginBottom: 20 }}>
         <h1 style={{ fontSize: 24, fontWeight: 800, color: C.white, margin: 0, fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1.5 }}>NUTRITION</h1>
-        <p style={{ fontSize: 13, color: C.g2, margin: "4px 0 0" }}>Dimanche 12 Avril — Jour de sortie longue</p>
+        <p style={{ fontSize: 13, color: C.g2, margin: "4px 0 0" }}>{nutrition.titre || "Menu du jour"}</p>
       </div>
  
       <div style={{ background: `linear-gradient(135deg,${C.card} 0%,#18140E 100%)`, borderRadius: 16, padding: 20, marginBottom: 16, border: `1px solid ${C.yellow}22` }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
           <div>
             <span style={{ fontSize: 10, color: C.yellow, fontWeight: 700, textTransform: "uppercase", letterSpacing: 2 }}>Objectif calorique</span>
-            <p style={{ fontSize: 32, fontWeight: 800, color: C.white, margin: "4px 0 0", fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1 }}>{nutrition.calories.toLocaleString()} <span style={{ fontSize: 14, color: C.g2 }}>KCAL</span></p>
+            <p style={{ fontSize: 32, fontWeight: 800, color: C.white, margin: "4px 0 0", fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1 }}>{(nutrition.calories || 0).toLocaleString()} <span style={{ fontSize: 14, color: C.g2 }}>KCAL</span></p>
           </div>
           <CircularProgress value={75} max={100} size={56} color={C.yellow} />
         </div>
         <div style={{ display: "flex", gap: 12 }}>
-          <MacroBar label="Protéines" value={nutrition.proteines} max={200} color={C.accent} />
-          <MacroBar label="Glucides" value={nutrition.glucides} max={300} color={C.yellow} />
-          <MacroBar label="Lipides" value={nutrition.lipides} max={100} color={C.blue} />
+          <MacroBar label="Protéines" value={nutrition.proteines || 0} max={200} color={C.accent} />
+          <MacroBar label="Glucides" value={nutrition.glucides || 0} max={300} color={C.yellow} />
+          <MacroBar label="Lipides" value={nutrition.lipides || 0} max={100} color={C.blue} />
         </div>
       </div>
  
       {nutrition.meals.map((m, i) => (
-        <div key={i} style={{ background: C.card, borderRadius: 14, padding: 18, marginBottom: 8, border: `1px solid ${C.border}` }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-            <span style={{ fontSize: 20 }}>{m.icon}</span>
-            <div>
-              <span style={{ fontSize: 10, color: C.g2, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>{m.titre}</span>
-              <p style={{ fontSize: 15, color: C.white, fontWeight: 700, margin: "2px 0 0" }}>{m.nom}</p>
+        <div key={i} onClick={() => setSelectedMeal(i)} style={{ background: C.card, borderRadius: 14, padding: 18, marginBottom: 8, border: `1px solid ${C.border}`, cursor: "pointer" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+              <span style={{ fontSize: 20 }}>{m.icon}</span>
+              <div>
+                <span style={{ fontSize: 10, color: C.g2, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>{m.titre}</span>
+                <p style={{ fontSize: 15, color: C.white, fontWeight: 700, margin: "2px 0 0" }}>{m.nom}</p>
+              </div>
             </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.g3} strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
-          <p style={{ fontSize: 12, color: C.g1, margin: "0 0 12px", lineHeight: 1.5 }}>{m.ingredients}</p>
+          {m.ingredients && <p style={{ fontSize: 12, color: C.g1, margin: "0 0 10px", lineHeight: 1.5 }}>{m.ingredients.length > 80 ? m.ingredients.substring(0, 80) + "..." : m.ingredients}</p>}
           <div style={{ display: "flex", gap: 16 }}>
-            <span style={{ fontSize: 11, color: C.white, fontWeight: 700 }}>{m.kcal} <span style={{ color: C.g2, fontWeight: 500 }}>kcal</span></span>
-            <span style={{ fontSize: 11, color: C.accent }}>{m.p}g P</span>
-            <span style={{ fontSize: 11, color: C.yellow }}>{m.g}g G</span>
-            <span style={{ fontSize: 11, color: C.blue }}>{m.l}g L</span>
+            {m.kcal && <span style={{ fontSize: 11, color: C.white, fontWeight: 700 }}>{m.kcal} <span style={{ color: C.g2, fontWeight: 500 }}>kcal</span></span>}
+            {m.p && <span style={{ fontSize: 11, color: C.accent }}>{m.p}g P</span>}
+            {m.g && <span style={{ fontSize: 11, color: C.yellow }}>{m.g}g G</span>}
+            {m.l && <span style={{ fontSize: 11, color: C.blue }}>{m.l}g L</span>}
           </div>
         </div>
       ))}
@@ -451,10 +527,109 @@ export default function Home() {
     }));
   }
  
+  // Parse le contenu texte de la page Nutrition Notion en repas structurés
+  function parseNutritionContent(contenu) {
+    if (!contenu) return { meals: [], supplements: [], calories: 0, proteines: 0, glucides: 0, lipides: 0 };
+ 
+    const lines = contenu.split("\n").filter(Boolean);
+    let meals = [];
+    let supplements = [];
+    let calories = 0, proteines = 0, glucides = 0, lipides = 0;
+    let currentMeal = null;
+    let currentSection = null;
+ 
+    for (const line of lines) {
+      // Parse macros ligne : "Calories : 2450 kcal | P : 180g | G : 250g | L : 85g"
+      if (line.includes("Calories") && line.includes("kcal")) {
+        const calMatch = line.match(/Calories\s*:\s*(\d+)/);
+        const pMatch = line.match(/P\s*:\s*(\d+)/);
+        const gMatch = line.match(/G\s*:\s*(\d+)/);
+        const lMatch = line.match(/L\s*:\s*(\d+)/);
+        if (calMatch) calories = parseInt(calMatch[1]);
+        if (pMatch) proteines = parseInt(pMatch[1]);
+        if (gMatch) glucides = parseInt(gMatch[1]);
+        if (lMatch) lipides = parseInt(lMatch[1]);
+        continue;
+      }
+ 
+      // Détecte un repas : "🍳 Déjeuner" ou "🍖 Dîner" ou "Déjeuner" etc.
+      const mealMatch = line.match(/^(🍳|🥣|🍖|🥗|🍽️|🌅)?\s*(Petit[ -]?déjeuner|Déjeuner|Dîner|Collation|Snack)/i);
+      if (mealMatch) {
+        if (currentMeal) meals.push(currentMeal);
+        const titre = mealMatch[2];
+        const iconMap = { "déjeuner": "🍳", "dîner": "🍖", "petit-déjeuner": "🥣", "petit déjeuner": "🥣", "collation": "🥗", "snack": "🥗" };
+        currentMeal = {
+          icon: mealMatch[1] || iconMap[titre.toLowerCase()] || "🍽️",
+          titre: titre,
+          nom: "",
+          ingredients: "",
+          recette: "",
+          contenuBrut: "",
+        };
+        currentSection = "meal";
+        continue;
+      }
+ 
+      // Détecte la supplémentation
+      if (line.includes("Supplémentation") || line.includes("supplémentation")) {
+        if (currentMeal) { meals.push(currentMeal); currentMeal = null; }
+        currentSection = "supplements";
+        continue;
+      }
+ 
+      // Parse le contenu selon la section
+      if (currentSection === "supplements") {
+        // Parse "1. **Whey Protein** : Après la séance - Pour..." ou "**Créatine** : Avant..."
+        const suppMatch = line.match(/\*?\*?(\w[\w\s-]+\w)\*?\*?\s*:\s*(.+)/);
+        if (suppMatch) {
+          const name = suppMatch[1].replace(/\*/g, "").trim();
+          const rest = suppMatch[2].trim();
+          const timingMatch = rest.match(/^([\w\s']+?)(?:\s*[-–]\s*|$)/);
+          const iconMap2 = { "whey": "🥤", "créatine": "⚡", "oméga": "🐟", "magnésium": "💊", "collagène": "🦴", "multivitamine": "💊", "ashwagandha": "🌿", "vitamine": "💊" };
+          const iconKey = Object.keys(iconMap2).find(k => name.toLowerCase().includes(k));
+          supplements.push({
+            name: name,
+            timing: timingMatch ? timingMatch[1].trim() : rest.split("-")[0].trim(),
+            icon: iconKey ? iconMap2[iconKey] : "💊",
+          });
+        }
+        continue;
+      }
+ 
+      if (currentMeal) {
+        // Nom du plat : ligne en **gras** ou première ligne après le titre du repas
+        if (line.includes("**") && !currentMeal.nom) {
+          currentMeal.nom = line.replace(/\*/g, "").trim();
+          continue;
+        }
+        if (!currentMeal.nom && line.trim().length > 3 && !line.startsWith("-")) {
+          currentMeal.nom = line.replace(/\*/g, "").trim();
+          continue;
+        }
+        // Ingrédients
+        if (line.toLowerCase().includes("ingrédient")) {
+          currentMeal.ingredients = line.replace(/^-\s*/, "").replace(/^Ingrédients?\s*:\s*/i, "").trim();
+          continue;
+        }
+        // Recette
+        if (line.toLowerCase().includes("recette")) {
+          currentMeal.recette = line.replace(/^-\s*/, "").replace(/^Recette\s*:\s*/i, "").trim();
+          continue;
+        }
+        // Tout le reste va dans contenuBrut
+        currentMeal.contenuBrut += line + "\n";
+      }
+    }
+    if (currentMeal) meals.push(currentMeal);
+ 
+    return { meals, supplements, calories, proteines, glucides, lipides };
+  }
+ 
   // Essaie de charger les données depuis Notion au démarrage
   useEffect(() => {
     async function loadData() {
       try {
+        // Charger les séances
         const res = await fetch("/api/seances");
         const data = await res.json();
         if (data.success && data.data.length > 0) {
@@ -462,6 +637,46 @@ export default function Home() {
           setSessions(mapped);
           setIsLive(true);
         }
+ 
+        // Charger la nutrition
+        try {
+          const today = new Date().toISOString().split("T")[0];
+          const resNut = await fetch("/api/nutrition?date=" + today);
+          const dataNut = await resNut.json();
+          if (dataNut.success && dataNut.data) {
+            const parsed = parseNutritionContent(dataNut.data.contenu);
+            if (parsed.meals.length > 0 || parsed.calories > 0) {
+              setNutrition({
+                ...DEMO_NUTRITION,
+                titre: dataNut.data.titre || "Menu du jour",
+                calories: parsed.calories || dataNut.data.calories || DEMO_NUTRITION.calories,
+                proteines: parsed.proteines || dataNut.data.proteines || DEMO_NUTRITION.proteines,
+                glucides: parsed.glucides || dataNut.data.glucides || DEMO_NUTRITION.glucides,
+                lipides: parsed.lipides || dataNut.data.lipides || DEMO_NUTRITION.lipides,
+                meals: parsed.meals.length > 0 ? parsed.meals : DEMO_NUTRITION.meals,
+                supplements: parsed.supplements.length > 0 ? parsed.supplements : DEMO_NUTRITION.supplements,
+              });
+            }
+          }
+        } catch (e) {
+          console.log("Nutrition: mode démo");
+        }
+ 
+        // Charger l'état de la semaine
+        try {
+          const resEtat = await fetch("/api/etat-semaine");
+          const dataEtat = await resEtat.json();
+          if (dataEtat.success && dataEtat.data) {
+            setEtat({
+              fatigue: dataEtat.data.fatigueCalculee || DEMO_ETAT.fatigue,
+              motivation: dataEtat.data.motivation || DEMO_ETAT.motivation,
+              douleurs: dataEtat.data.douleurs || DEMO_ETAT.douleurs,
+            });
+          }
+        } catch (e) {
+          console.log("État semaine: mode démo");
+        }
+ 
       } catch (e) {
         console.log("Mode démo (Notion non connecté)");
       }
@@ -533,4 +748,3 @@ export default function Home() {
     </>
   );
 }
- 
