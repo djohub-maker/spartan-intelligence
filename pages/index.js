@@ -430,18 +430,39 @@ export default function Home() {
   const [etat, setEtat] = useState(DEMO_ETAT);
   const [isLive, setIsLive] = useState(false);
 
+  // Transforme les données Notion en format compatible avec l'UI
+  function mapNotionSessions(notionData) {
+    const jourMap = {
+      "lundi": "Lun", "mardi": "Mar", "mercredi": "Mer",
+      "jeudi": "Jeu", "vendredi": "Ven", "samedi": "Sam", "dimanche": "Dim",
+      "monday": "Lun", "tuesday": "Mar", "wednesday": "Mer",
+      "thursday": "Jeu", "friday": "Ven", "saturday": "Sam", "sunday": "Dim",
+    };
+    const typeMap = { "Run": "run", "WeightTraining": "force", "Hiking": "rest" };
+
+    return notionData.map((s) => ({
+      ...s,
+      jour: jourMap[(s.jour || "").toLowerCase()] || s.jour || "?",
+      type: typeMap[s.type] || (s.type ? "force" : "rest"),
+      done: (s.statut || "").toLowerCase() === "fait",
+      intensity: s.fatigue ? s.fatigue * 10 : (s.fcMoyenne ? Math.round((s.fcMoyenne / 180) * 100) : 50),
+      typeSeance: (s.nom || "").toUpperCase(),
+      objectif: "",
+    }));
+  }
+
   // Essaie de charger les données depuis Notion au démarrage
   useEffect(() => {
     async function loadData() {
       try {
-        const res = await fetch("/api/seances?semaine=Semaine 15");
+        const res = await fetch("/api/seances");
         const data = await res.json();
         if (data.success && data.data.length > 0) {
-          setSessions(data.data);
+          const mapped = mapNotionSessions(data.data);
+          setSessions(mapped);
           setIsLive(true);
         }
       } catch (e) {
-        // Notion pas configuré, on garde les données de démo
         console.log("Mode démo (Notion non connecté)");
       }
     }
@@ -509,6 +530,10 @@ export default function Home() {
           ))}
         </div>
       </div>
+    </>
+  );
+}
+
     </>
   );
 }
