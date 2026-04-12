@@ -256,6 +256,80 @@ function PlanScreen({ sessions }) {
  
 function NutritionScreen({ nutrition }) {
   const [selectedMeal, setSelectedMeal] = useState(null);
+  const [selectedSupplement, setSelectedSupplement] = useState(null);
+ 
+  // Base de connaissances suppléments
+  const supplementInfo = {
+    "whey protein": { color: "#E63626", benefits: "Favorise la synthèse protéique musculaire après l'effort. Accélère la récupération en apportant des acides aminés rapidement assimilables. Idéale dans les 30 minutes suivant une séance intense.", dosage: "25-30g dans un shaker avec de l'eau ou du lait végétal.", timing: "Après la séance" },
+    "créatine": { color: "#4A9EFF", benefits: "Augmente les réserves de phosphocréatine dans les muscles, permettant des efforts explosifs plus longs. Améliore la force, la puissance et l'endurance musculaire. Effet prouvé scientifiquement sur la performance.", dosage: "3-5g par jour, tous les jours (pas besoin de phase de charge).", timing: "Avant la séance ou le matin" },
+    "oméga-3": { color: "#2DD4A0", benefits: "Propriétés anti-inflammatoires puissantes — réduit les douleurs articulaires et musculaires. Soutient la santé cardiovasculaire et améliore la récupération. Favorise aussi la concentration et la santé cérébrale.", dosage: "2-3g d'EPA/DHA combinés par jour.", timing: "Le matin avec le petit-déjeuner" },
+    "magnésium bisglycinate": { color: "#F5A623", benefits: "Réduit les crampes et la tension musculaire. Améliore la qualité du sommeil et favorise la relaxation nerveuse. La forme bisglycinate est la mieux absorbée et la plus douce pour l'estomac.", dosage: "300-400mg le soir avant le coucher.", timing: "Le soir" },
+    "magnésium": { color: "#F5A623", benefits: "Réduit les crampes et la tension musculaire. Améliore la qualité du sommeil et favorise la relaxation nerveuse. Essentiel pour la récupération après des efforts intenses.", dosage: "300-400mg le soir avant le coucher.", timing: "Le soir" },
+    "collagène": { color: "#FF6B5A", benefits: "Renforce les tendons, ligaments et cartilages — crucial en OCR où les articulations sont très sollicitées. Prévient les blessures et accélère la guérison des tissus conjonctifs. Améliore aussi l'élasticité de la peau.", dosage: "10-15g par jour avec de la vitamine C pour optimiser l'absorption.", timing: "Avant le coucher" },
+    "multivitamines": { color: "#B8B8BF", benefits: "Comble les carences possibles dues à un entraînement intensif. Soutient le système immunitaire et l'énergie globale. Apporte les micronutriments que l'alimentation seule ne couvre pas toujours.", dosage: "1 comprimé par jour.", timing: "Après le déjeuner" },
+    "ashwagandha": { color: "#9B59B6", benefits: "Adaptogène puissant qui aide à réguler le cortisol (hormone du stress). Favorise la récupération nerveuse après des entraînements intenses. Améliore la qualité du sommeil et réduit l'anxiété.", dosage: "300-600mg d'extrait standardisé.", timing: "Le soir" },
+    "vitamine d": { color: "#F5A623", benefits: "Essentielle pour la santé osseuse et la force musculaire. Renforce le système immunitaire, surtout en hiver. La majorité des sportifs en sont carencés.", dosage: "2000-4000 UI par jour.", timing: "Le matin avec un repas gras" },
+    "bcaa": { color: "#4A9EFF", benefits: "Acides aminés à chaîne ramifiée qui réduisent la fatigue pendant l'effort et limitent la dégradation musculaire. Utiles pendant les séances longues de trail.", dosage: "5-10g pendant ou après l'entraînement.", timing: "Pendant la séance" },
+    "caféine": { color: "#E63626", benefits: "Améliore la vigilance, réduit la perception de la fatigue et augmente la performance en endurance. Effet prouvé sur les performances en course à pied et en OCR.", dosage: "3-6mg par kg de poids de corps, 30-60 min avant l'effort.", timing: "Avant la séance" },
+    "zinc": { color: "#B8B8BF", benefits: "Soutient le système immunitaire et la récupération. Joue un rôle dans la synthèse de testostérone et la réparation tissulaire.", dosage: "15-30mg par jour.", timing: "Le soir" },
+    "fer": { color: "#E63626", benefits: "Essentiel pour le transport de l'oxygène dans le sang. Les sportifs d'endurance ont des besoins accrus en fer. Une carence entraîne fatigue et baisse de performance.", dosage: "Selon bilan sanguin. Ne pas supplémenter sans avis médical.", timing: "Le matin à jeun" },
+  };
+ 
+  function getSupplementDetail(name) {
+    const key = Object.keys(supplementInfo).find(k => name.toLowerCase().includes(k));
+    return key ? supplementInfo[key] : { color: "#B8B8BF", benefits: "Complément alimentaire qui soutient ta performance et ta récupération sportive.", dosage: "Selon les recommandations du fabricant.", timing: "Selon les recommandations" };
+  }
+ 
+  // Vue détail d'un supplément
+  if (selectedSupplement !== null) {
+    const s = nutrition.supplements[selectedSupplement];
+    const detail = getSupplementDetail(s.name);
+    return (
+      <div style={{ padding: "0 20px 24px" }}>
+        <button onClick={() => setSelectedSupplement(null)} style={{ background: "none", border: "none", color: C.g2, fontSize: 13, padding: 0, marginBottom: 16, cursor: "pointer" }}>← Retour à la nutrition</button>
+ 
+        <div style={{
+          background: `linear-gradient(135deg,${C.card} 0%,${detail.color}11 100%)`,
+          borderRadius: 16, padding: 20, marginBottom: 16,
+          border: `1px solid ${detail.color}33`,
+          position: "relative", overflow: "hidden",
+        }}>
+          <div style={{ position: "absolute", top: -20, right: -20, width: 80, height: 80, background: `${detail.color}20`, borderRadius: "50%", filter: "blur(30px)" }} />
+          <div style={{ position: "relative" }}>
+            <span style={{ fontSize: 36 }}>{s.icon}</span>
+            <h2 style={{ fontSize: 22, fontWeight: 800, color: C.white, margin: "8px 0 4px", fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1.5 }}>{s.name.toUpperCase()}</h2>
+            <div style={{ display: "inline-block", background: `${detail.color}22`, borderRadius: 8, padding: "4px 10px", marginTop: 4 }}>
+              <span style={{ fontSize: 11, color: detail.color, fontWeight: 700 }}>⏱ {s.timing}</span>
+            </div>
+          </div>
+        </div>
+ 
+        <div style={{ background: C.card, borderRadius: 14, padding: 18, marginBottom: 8, border: `1px solid ${C.border}` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <span style={{ fontSize: 16 }}>💪</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: C.g1, textTransform: "uppercase", letterSpacing: 1.5 }}>Bienfaits</span>
+          </div>
+          <p style={{ fontSize: 13, color: C.white, margin: 0, lineHeight: 1.7 }}>{detail.benefits}</p>
+        </div>
+ 
+        <div style={{ background: C.card, borderRadius: 14, padding: 18, marginBottom: 8, border: `1px solid ${C.border}` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <span style={{ fontSize: 16 }}>💊</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: C.g1, textTransform: "uppercase", letterSpacing: 1.5 }}>Dosage recommandé</span>
+          </div>
+          <p style={{ fontSize: 13, color: C.white, margin: 0, lineHeight: 1.7 }}>{detail.dosage}</p>
+        </div>
+ 
+        <div style={{ background: C.card, borderRadius: 14, padding: 18, border: `1px solid ${C.border}` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <span style={{ fontSize: 16 }}>⏰</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: C.g1, textTransform: "uppercase", letterSpacing: 1.5 }}>Quand le prendre</span>
+          </div>
+          <p style={{ fontSize: 13, color: C.white, margin: 0, lineHeight: 1.7 }}>{detail.timing}</p>
+        </div>
+      </div>
+    );
+  }
  
   // Vue détail d'un repas
   if (selectedMeal !== null) {
@@ -375,12 +449,15 @@ function NutritionScreen({ nutrition }) {
       <div style={{ background: C.card, borderRadius: 14, padding: 18, marginTop: 8, border: `1px solid ${C.border}` }}>
         <h3 style={{ fontSize: 11, fontWeight: 700, color: C.g2, margin: "0 0 14px", textTransform: "uppercase", letterSpacing: 1.5 }}>💊 Supplémentation</h3>
         {nutrition.supplements.map((s, i) => (
-          <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: i < nutrition.supplements.length-1 ? `1px solid ${C.border}` : "none" }}>
+          <div key={i} onClick={() => setSelectedSupplement(i)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: i < nutrition.supplements.length-1 ? `1px solid ${C.border}` : "none", cursor: "pointer" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <span style={{ fontSize: 14 }}>{s.icon}</span>
               <span style={{ fontSize: 13, color: C.white, fontWeight: 600 }}>{s.name}</span>
             </div>
-            <span style={{ fontSize: 11, color: C.g2 }}>{s.timing}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 11, color: C.g2 }}>{s.timing}</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.g3} strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
           </div>
         ))}
       </div>
@@ -748,3 +825,4 @@ export default function Home() {
     </>
   );
 }
+ 
