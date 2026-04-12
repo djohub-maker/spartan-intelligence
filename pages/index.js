@@ -532,8 +532,8 @@ function BilanScreen({ sessions, etat, bilan }) {
   const avgFC = sessions.filter(s=>s.fcMoyenne).length > 0 ? Math.round(sessions.filter(s=>s.fcMoyenne).reduce((a,s) => a + s.fcMoyenne, 0) / sessions.filter(s=>s.fcMoyenne).length) : 0;
 
   // Parse le contenu du bilan Notion en paragraphes
- const bilanParagraphs = (bilan?.contenu || bilan?.bilan || "").split("\n").filter(l => l.trim().length > 0);
-  
+  const bilanParagraphs = bilan?.contenu ? bilan.contenu.split("\n").filter(l => l.trim().length > 0) : [];
+
   return (
     <div style={{ padding: "0 20px 24px" }}>
       <div style={{ marginBottom: 20 }}>
