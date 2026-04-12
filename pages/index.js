@@ -279,7 +279,7 @@ function PlanScreen({ sessions, initialSelected }) {
   return (
     <div style={{ padding: "0 20px 24px" }}>
       <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 800, color: C.white, margin: 0, fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1.5 }}>PLAN SEMAINE {sessions[0]?.date ? getWeekNumber(new Date(sessions[0].date)) : getWeekNumber(new Date()) + 1}</h1>
+        <h1 style={{ fontSize: 24, fontWeight: 800, color: C.white, margin: 0, fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1.5 }}>PLAN {sessions[0]?.semaine ? sessions[0].semaine.toUpperCase() : `SEMAINE ${getWeekNumber(new Date()) + 1}`}</h1>
         <p style={{ fontSize: 13, color: C.g2, margin: "4px 0 0" }}>Programme à venir</p>
       </div>
       {sessions.map((s, i) => (
@@ -823,23 +823,45 @@ export default function Home() {
           setIsLive(true);
         }
 
-        // Charger les séances FUTURES (pour le plan)
+        // Charger le PLAN de la semaine prochaine
         try {
-          const now = new Date();
-          const todayStr = now.toISOString().split("T")[0];
-          const resPlan = await fetch(`/api/seances?debut=${todayStr}&fin=2030-12-31`);
+          const weekNum = getWeekNumber(new Date()) + 1;
+          const resPlan = await fetch(`/api/plan?semaine=Semaine ${weekNum}`);
           const dataPlan = await resPlan.json();
           if (dataPlan.success && dataPlan.data.length > 0) {
-            // Filtrer pour ne garder que les séances APRÈS aujourd'hui
-            const future = dataPlan.data.filter(s => s.date > todayStr);
-            if (future.length > 0) {
-              setPlanSessions(mapNotionSessions(future));
-            } else {
-              // Inclure aujourd'hui si pas de séances futures
-              setPlanSessions(mapNotionSessions(dataPlan.data));
+            // Mapper les données du plan (colonnes différentes de Séance)
+            const jourMap2 = {
+              "lundi": "Lun", "mardi": "Mar", "mercredi": "Mer",
+              "jeudi": "Jeu", "vendredi": "Ven", "samedi": "Sam", "dimanche": "Dim",
+            };
+            const typeMap2 = { "Trail": "run", "Renforcement": "force", "Repos": "rest" };
+            const mapped = dataPlan.data.map(s => ({
+              ...s,
+              nom: s.typeSeance || s.semaine,
+              jour: jourMap2[(s.jour || "").toLowerCase()] || s.jour || "?",
+              type: typeMap2[s.typeEffort] || "force",
+              done: (s.statut || "").toLowerCase() === "done" || (s.statut || "").toLowerCase() === "fait",
+              intensity: 50,
+              typeSeance: (s.typeSeance || "").toUpperCase(),
+            }));
+            setPlanSessions(mapped);
+          } else {
+            // Si pas de plan semaine prochaine, essayer la semaine en cours
+            const weekNumCurrent = getWeekNumber(new Date());
+            const resPlan2 = await fetch(`/api/plan?semaine=Semaine ${weekNumCurrent}`);
+            const dataPlan2 = await resPlan2.json();
+            if (dataPlan2.success && dataPlan2.data.length > 0) {
+              const jourMap2 = { "lundi": "Lun", "mardi": "Mar", "mercredi": "Mer", "jeudi": "Jeu", "vendredi": "Ven", "samedi": "Sam", "dimanche": "Dim" };
+              const typeMap2 = { "Trail": "run", "Renforcement": "force", "Repos": "rest" };
+              const mapped = dataPlan2.data.map(s => ({
+                ...s, nom: s.typeSeance || s.semaine,
+                jour: jourMap2[(s.jour || "").toLowerCase()] || s.jour || "?",
+                type: typeMap2[s.typeEffort] || "force",
+                done: (s.statut || "").toLowerCase() === "done" || (s.statut || "").toLowerCase() === "fait",
+                intensity: 50, typeSeance: (s.typeSeance || "").toUpperCase(),
+              }));
+              setPlanSessions(mapped);
             }
-          } else if (data.success && data.data.length > 0) {
-            setPlanSessions(mapNotionSessions(data.data));
           }
         } catch (e) {
           console.log("Plan: mode démo");
