@@ -6,10 +6,10 @@
 // Elle essaie de charger les données depuis Notion.
 // Si Notion n'est pas configuré, elle affiche des données de démo.
 // ============================================
- 
+
 import { useState, useEffect } from "react";
 import Head from "next/head";
- 
+
 // ─── COULEURS ────────────────────────────────────────
 const C = {
   bg: "#0A0A0C", card: "#141418", accent: "#E63626",
@@ -20,7 +20,7 @@ const C = {
   white: "#F5F5F7", g1: "#B8B8BF", g2: "#6E6E78",
   g3: "#3A3A42", border: "rgba(255,255,255,0.06)",
 };
- 
+
 // ─── DONNÉES DE DÉMO ─────────────────────────────────
 // Utilisées quand Notion n'est pas encore connecté
 const DEMO_SESSIONS = [
@@ -32,7 +32,7 @@ const DEMO_SESSIONS = [
   { jour: "Sam", nom: "Sortie Longue", type: "run", done: false, intensity: 95, duree: 122, distance: 17.0, denivele: 559, typeSeance: "SORTIE LONGUE", objectif: "Endurance", explication: "🏃 ÉCHAUFFEMENT : Intégré\n---\n💪 CORPS DE SÉANCE :\n- 2h trail endurance fondamentale\n- Terrain mixte forêt/sentier\n- Ravitaillement toutes les 45min\n---\n🧊 RETOUR AU CALME : 10 min marche + étirements" },
   { jour: "Dim", nom: "Repos actif", type: "rest", done: false, intensity: 20, duree: 60, typeSeance: "REPOS ACTIF", objectif: "Mobilité", explication: "💪 CORPS DE SÉANCE :\n- Marche 45 min + mobilité douce\n- Foam roller 15 min\n- Stretching global" },
 ];
- 
+
 const DEMO_NUTRITION = {
   calories: 2450, proteines: 180, glucides: 250, lipides: 85,
   meals: [
@@ -47,11 +47,11 @@ const DEMO_NUTRITION = {
     { name: "Collagène", timing: "Avant coucher", icon: "🦴" },
   ],
 };
- 
+
 const DEMO_ETAT = { fatigue: 5.5, motivation: 8, douleurs: 2 };
- 
+
 // ─── COMPOSANTS RÉUTILISABLES ────────────────────────
- 
+
 function MacroBar({ label, value, max, color }) {
   return (
     <div style={{ flex: 1 }}>
@@ -65,7 +65,7 @@ function MacroBar({ label, value, max, color }) {
     </div>
   );
 }
- 
+
 function CircularProgress({ value, max, size = 52, stroke = 4, color = C.accent }) {
   const r = (size - stroke) / 2;
   const circ = 2 * Math.PI * r;
@@ -77,9 +77,9 @@ function CircularProgress({ value, max, size = 52, stroke = 4, color = C.accent 
     </svg>
   );
 }
- 
+
 // ─── ICÔNES ──────────────────────────────────────────
- 
+
 function Icon({ name, active }) {
   const s = active ? C.accent : C.g2;
   const icons = {
@@ -91,69 +91,78 @@ function Icon({ name, active }) {
   };
   return icons[name] || null;
 }
- 
+
 // ─── ÉCRAN ACCUEIL ───────────────────────────────────
- 
-function DashboardScreen({ sessions, nutrition, etat }) {
-  const today = sessions[5];
+
+function DashboardScreen({ sessions, nutrition, etat, onNavigate }) {
+  const now = new Date();
+  const joursSemaine = ["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"];
+  const mois = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+  const dateStr = `${joursSemaine[now.getDay()]} ${now.getDate()} ${mois[now.getMonth()]}`;
+  const dayIndex = (now.getDay() + 6) % 7; // 0=Lun, 6=Dim
+  const today = sessions[dayIndex] || sessions[0];
   return (
     <div style={{ padding: "0 20px 24px" }}>
       <div style={{ marginBottom: 24 }}>
-        <p style={{ fontSize: 14, color: C.g2, marginBottom: 2 }}>Samedi 12 Avril</p>
+        <p style={{ fontSize: 14, color: C.g2, marginBottom: 2 }}>{dateStr}</p>
         <h1 style={{ fontSize: 26, fontWeight: 800, color: C.white, margin: 0, fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1.5, lineHeight: 1.2 }}>
-          PRÊT POUR LA<br/><span style={{ color: C.accent }}>SORTIE LONGUE</span> ?
+          {today?.nom ? <>PRÊT POUR<br/><span style={{ color: C.accent }}>{(today.nom || "").toUpperCase()}</span> ?</> : <>BIENVENUE<br/><span style={{ color: C.accent }}>SPARTAN</span></>}
         </h1>
       </div>
- 
-      {/* Séance du jour */}
-      <div style={{ background: `linear-gradient(135deg,${C.card} 0%,#1E1215 100%)`, borderRadius: 16, padding: 20, marginBottom: 16, border: `1px solid ${C.accent}33`, position: "relative", overflow: "hidden" }}>
+
+      {/* Séance du jour — cliquable */}
+      <div onClick={() => onNavigate("plan", dayIndex)} style={{ background: `linear-gradient(135deg,${C.card} 0%,#1E1215 100%)`, borderRadius: 16, padding: 20, marginBottom: 16, border: `1px solid ${C.accent}33`, position: "relative", overflow: "hidden", cursor: "pointer" }}>
         <div style={{ position: "absolute", top: -20, right: -20, width: 100, height: 100, background: C.accentGlow, borderRadius: "50%", filter: "blur(40px)" }} />
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, position: "relative" }}>
           <div>
             <span style={{ fontSize: 10, color: C.accent, fontWeight: 700, textTransform: "uppercase", letterSpacing: 2 }}>Séance du jour</span>
-            <h2 style={{ fontSize: 20, fontWeight: 800, color: C.white, margin: "4px 0 0", fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1 }}>{today?.typeSeance || "SORTIE LONGUE"}</h2>
-            <p style={{ fontSize: 13, color: C.g1, margin: "4px 0 0" }}>Trail endurance fondamentale</p>
+            <h2 style={{ fontSize: 20, fontWeight: 800, color: C.white, margin: "4px 0 0", fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1 }}>{(today?.nom || "Repos").toUpperCase()}</h2>
+            <p style={{ fontSize: 13, color: C.g1, margin: "4px 0 0" }}>{today?.explication ? today.explication.split("\n")[0].replace(/^[🏃💪🧊🏔️]\s*/, "").substring(0, 50) : "Voir le détail"}</p>
           </div>
-          <div style={{ background: C.accent, borderRadius: 10, padding: "6px 12px", fontSize: 11, fontWeight: 700, color: "#fff", textTransform: "uppercase", letterSpacing: 1 }}>{today?.distance || 17} km</div>
+          {today?.distance ? <div style={{ background: C.accent, borderRadius: 10, padding: "6px 12px", fontSize: 11, fontWeight: 700, color: "#fff", textTransform: "uppercase", letterSpacing: 1 }}>{Math.round(today.distance * 10) / 10} km</div> : null}
         </div>
         <div style={{ display: "flex", gap: 20, position: "relative" }}>
           {[
-            { l: "Durée", v: today?.duree ? `${Math.floor(today.duree/60)}h${String(today.duree%60).padStart(2,"0")}` : "2h00" },
-            { l: "D+", v: `${today?.denivele || 559}m` },
-            { l: "FC cible", v: "140-155" },
-          ].map((d,i) => (
+            today?.duree ? { l: "Durée", v: today.duree >= 60 ? `${Math.floor(today.duree/60)}h${String(Math.round(today.duree%60)).padStart(2,"0")}` : `${Math.round(today.duree)} min` } : null,
+            today?.denivele ? { l: "D+", v: `${Math.round(today.denivele)}m` } : null,
+            today?.fcMoyenne ? { l: "FC moy", v: `${Math.round(today.fcMoyenne)} bpm` } : null,
+          ].filter(Boolean).map((d,i) => (
             <div key={i}>
               <p style={{ fontSize: 10, color: C.g2, textTransform: "uppercase", letterSpacing: 1, margin: 0, fontWeight: 600 }}>{d.l}</p>
               <p style={{ fontSize: 18, color: C.white, fontWeight: 700, margin: "2px 0 0" }}>{d.v}</p>
             </div>
           ))}
         </div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", marginTop: 14, gap: 6 }}>
+          <span style={{ fontSize: 11, color: C.accent, fontWeight: 600 }}>Voir le détail</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
       </div>
- 
-      {/* Semaine */}
+
+      {/* Semaine — jours cliquables */}
       <div style={{ marginBottom: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
           <h3 style={{ fontSize: 13, fontWeight: 700, color: C.white, margin: 0, textTransform: "uppercase", letterSpacing: 1.5 }}>Semaine 15</h3>
-          <span style={{ fontSize: 11, color: C.g2 }}>{sessions.filter(s=>s.done).length}/7 séances</span>
+          <span style={{ fontSize: 11, color: C.g2 }}>{sessions.filter(s=>s.done).length}/{sessions.length} séances</span>
         </div>
         <div style={{ display: "flex", gap: 6 }}>
           {sessions.map((s,i) => (
-            <div key={i} style={{ flex: 1, background: s.done ? (s.type==="run" ? "rgba(230,54,38,0.15)" : s.type==="force" ? C.blueSoft : C.greenSoft) : C.card, borderRadius: 10, padding: "10px 0", textAlign: "center", border: i===5 ? `1.5px solid ${C.accent}` : `1px solid ${C.border}` }}>
-              <p style={{ fontSize: 10, color: i===5 ? C.accent : C.g2, fontWeight: 700, margin: 0, textTransform: "uppercase" }}>{s.jour}</p>
+            <div key={i} onClick={() => onNavigate("plan", i)} style={{ flex: 1, background: s.done ? (s.type==="run" ? "rgba(230,54,38,0.15)" : s.type==="force" ? C.blueSoft : C.greenSoft) : C.card, borderRadius: 10, padding: "10px 0", textAlign: "center", border: i===dayIndex ? `1.5px solid ${C.accent}` : `1px solid ${C.border}`, cursor: "pointer" }}>
+              <p style={{ fontSize: 10, color: i===dayIndex ? C.accent : C.g2, fontWeight: 700, margin: 0, textTransform: "uppercase" }}>{s.jour}</p>
               <div style={{ width: 6, height: 6, borderRadius: "50%", background: s.done ? C.green : C.g3, margin: "6px auto 0" }} />
             </div>
           ))}
         </div>
       </div>
- 
+
       {/* Stats */}
       <div style={{ background: C.card, borderRadius: 16, padding: 20, border: `1px solid ${C.border}`, marginBottom: 16 }}>
         <h3 style={{ fontSize: 12, fontWeight: 700, color: C.g2, margin: "0 0 16px", textTransform: "uppercase", letterSpacing: 1.5 }}>Bilan en cours</h3>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
           {[
-            { v: "48.8", l: "km" },
-            { v: "915", l: "D+ (m)" },
-            { v: "7h12", l: "Durée" },
+            { v: Math.round(sessions.reduce((a,s) => a + (s.distance||0), 0) * 10) / 10 || "—", l: "km" },
+            { v: Math.round(sessions.reduce((a,s) => a + (s.denivele||0), 0)) || "—", l: "D+ (m)" },
+            { v: (() => { const t = Math.round(sessions.reduce((a,s) => a + (s.duree||0), 0)); return t >= 60 ? `${Math.floor(t/60)}h${String(t%60).padStart(2,"0")}` : `${t}min`; })(), l: "Durée" },
           ].map((s,i) => (
             <div key={i} style={{ textAlign: "center" }}>
               <p style={{ fontSize: 22, fontWeight: 800, color: C.white, margin: 0 }}>{s.v}</p>
@@ -162,9 +171,9 @@ function DashboardScreen({ sessions, nutrition, etat }) {
           ))}
         </div>
       </div>
- 
-      {/* Nutrition preview */}
-      <div style={{ background: C.card, borderRadius: 16, padding: 20, border: `1px solid ${C.border}` }}>
+
+      {/* Nutrition preview — cliquable */}
+      <div onClick={() => onNavigate("nutrition")} style={{ background: C.card, borderRadius: 16, padding: 20, border: `1px solid ${C.border}`, cursor: "pointer" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <h3 style={{ fontSize: 12, fontWeight: 700, color: C.g2, margin: 0, textTransform: "uppercase", letterSpacing: 1.5 }}>Nutrition du jour</h3>
           <span style={{ fontSize: 20, fontWeight: 800, color: C.white }}>{nutrition.calories} <span style={{ fontSize: 11, color: C.g2, fontWeight: 600 }}>kcal</span></span>
@@ -174,16 +183,27 @@ function DashboardScreen({ sessions, nutrition, etat }) {
           <MacroBar label="Gluc" value={nutrition.glucides} max={300} color={C.yellow} />
           <MacroBar label="Lip" value={nutrition.lipides} max={100} color={C.blue} />
         </div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", marginTop: 14, gap: 6 }}>
+          <span style={{ fontSize: 11, color: C.yellow, fontWeight: 600 }}>Voir le menu complet</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.yellow} strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
       </div>
     </div>
   );
 }
- 
+
 // ─── ÉCRAN PLAN ──────────────────────────────────────
- 
-function PlanScreen({ sessions }) {
+
+function PlanScreen({ sessions, initialSelected }) {
   const [selected, setSelected] = useState(null);
- 
+  
+  // Quand on navigue depuis l'accueil, ouvrir la séance demandée
+  useEffect(() => {
+    if (initialSelected !== null && initialSelected !== undefined) {
+      setSelected(initialSelected);
+    }
+  }, [initialSelected]);
+
   if (selected !== null) {
     const s = sessions[selected];
     return (
@@ -194,16 +214,16 @@ function PlanScreen({ sessions }) {
           <h2 style={{ fontSize: 22, fontWeight: 800, color: C.white, margin: "6px 0 4px", fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1.5 }}>{s.typeSeance}</h2>
           <p style={{ fontSize: 12, color: C.g1, margin: 0 }}>Objectif : {s.objectif}</p>
         </div>
- 
+
         {(s.duree || s.distance || s.fcMoyenne) && (
           <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
-            {s.duree && <div style={{ background: C.card, borderRadius: 10, padding: "10px 14px", border: `1px solid ${C.border}` }}><span style={{ fontSize: 9, color: C.g2, textTransform: "uppercase", letterSpacing: 1, fontWeight: 600 }}>Durée</span><p style={{ fontSize: 16, fontWeight: 700, color: C.white, margin: "2px 0 0" }}>{s.duree} min</p></div>}
-            {s.distance && <div style={{ background: C.card, borderRadius: 10, padding: "10px 14px", border: `1px solid ${C.border}` }}><span style={{ fontSize: 9, color: C.g2, textTransform: "uppercase", letterSpacing: 1, fontWeight: 600 }}>Distance</span><p style={{ fontSize: 16, fontWeight: 700, color: C.white, margin: "2px 0 0" }}>{s.distance} km</p></div>}
-            {s.denivele && <div style={{ background: C.card, borderRadius: 10, padding: "10px 14px", border: `1px solid ${C.border}` }}><span style={{ fontSize: 9, color: C.g2, textTransform: "uppercase", letterSpacing: 1, fontWeight: 600 }}>D+</span><p style={{ fontSize: 16, fontWeight: 700, color: C.white, margin: "2px 0 0" }}>{s.denivele}m</p></div>}
-            {s.fcMoyenne && <div style={{ background: C.card, borderRadius: 10, padding: "10px 14px", border: `1px solid ${C.border}` }}><span style={{ fontSize: 9, color: C.g2, textTransform: "uppercase", letterSpacing: 1, fontWeight: 600 }}>FC moy</span><p style={{ fontSize: 16, fontWeight: 700, color: C.white, margin: "2px 0 0" }}>{s.fcMoyenne} bpm</p></div>}
+            {s.duree && <div style={{ background: C.card, borderRadius: 10, padding: "10px 14px", border: `1px solid ${C.border}` }}><span style={{ fontSize: 9, color: C.g2, textTransform: "uppercase", letterSpacing: 1, fontWeight: 600 }}>Durée</span><p style={{ fontSize: 16, fontWeight: 700, color: C.white, margin: "2px 0 0" }}>{Math.round(s.duree)} min</p></div>}
+            {s.distance && <div style={{ background: C.card, borderRadius: 10, padding: "10px 14px", border: `1px solid ${C.border}` }}><span style={{ fontSize: 9, color: C.g2, textTransform: "uppercase", letterSpacing: 1, fontWeight: 600 }}>Distance</span><p style={{ fontSize: 16, fontWeight: 700, color: C.white, margin: "2px 0 0" }}>{Math.round(s.distance * 10) / 10} km</p></div>}
+            {s.denivele && <div style={{ background: C.card, borderRadius: 10, padding: "10px 14px", border: `1px solid ${C.border}` }}><span style={{ fontSize: 9, color: C.g2, textTransform: "uppercase", letterSpacing: 1, fontWeight: 600 }}>D+</span><p style={{ fontSize: 16, fontWeight: 700, color: C.white, margin: "2px 0 0" }}>{Math.round(s.denivele)}m</p></div>}
+            {s.fcMoyenne && <div style={{ background: C.card, borderRadius: 10, padding: "10px 14px", border: `1px solid ${C.border}` }}><span style={{ fontSize: 9, color: C.g2, textTransform: "uppercase", letterSpacing: 1, fontWeight: 600 }}>FC moy</span><p style={{ fontSize: 16, fontWeight: 700, color: C.white, margin: "2px 0 0" }}>{Math.round(s.fcMoyenne)} bpm</p></div>}
           </div>
         )}
- 
+
         {s.explication && s.explication.split("---").map((block, i) => {
           const trimmed = block.trim();
           if (!trimmed) return null;
@@ -213,17 +233,24 @@ function PlanScreen({ sessions }) {
             </div>
           );
         })}
- 
-        {s.ressenti && (
+
+        {(s.ressenti || s.fatigue) && (
           <div style={{ background: C.card, borderRadius: 12, padding: 16, marginTop: 8, border: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between" }}>
-            <div><span style={{ fontSize: 11, fontWeight: 700, color: C.g2, textTransform: "uppercase", letterSpacing: 1 }}>Ressenti</span><p style={{ fontSize: 14, color: C.white, fontWeight: 600, margin: "2px 0 0" }}>{s.ressenti}</p></div>
-            <div style={{ textAlign: "right" }}><span style={{ fontSize: 11, fontWeight: 700, color: C.g2, textTransform: "uppercase", letterSpacing: 1 }}>Fatigue</span><p style={{ fontSize: 14, color: s.fatigue<=3?C.green:s.fatigue<=6?C.yellow:C.accent, fontWeight: 700, margin: "2px 0 0" }}>{s.fatigue}/10</p></div>
+            {s.ressenti && <div><span style={{ fontSize: 11, fontWeight: 700, color: C.g2, textTransform: "uppercase", letterSpacing: 1 }}>Ressenti</span><p style={{ fontSize: 14, color: C.white, fontWeight: 600, margin: "2px 0 0" }}>{s.ressenti}</p></div>}
+            {s.fatigue && <div style={{ textAlign: "right" }}><span style={{ fontSize: 11, fontWeight: 700, color: C.g2, textTransform: "uppercase", letterSpacing: 1 }}>Fatigue</span><p style={{ fontSize: 14, color: s.fatigue<=3?C.green:s.fatigue<=6?C.yellow:C.accent, fontWeight: 700, margin: "2px 0 0" }}>{s.fatigue}/10</p></div>}
+          </div>
+        )}
+
+        {s.commentaire && (
+          <div style={{ background: C.card, borderRadius: 12, padding: 16, marginTop: 8, border: `1px solid ${C.border}` }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: C.g2, textTransform: "uppercase", letterSpacing: 1 }}>Commentaire</span>
+            <p style={{ fontSize: 13, color: C.white, margin: "4px 0 0", lineHeight: 1.6 }}>{s.commentaire}</p>
           </div>
         )}
       </div>
     );
   }
- 
+
   return (
     <div style={{ padding: "0 20px 24px" }}>
       <div style={{ marginBottom: 20 }}>
@@ -251,13 +278,13 @@ function PlanScreen({ sessions }) {
     </div>
   );
 }
- 
+
 // ─── ÉCRAN NUTRITION ─────────────────────────────────
- 
+
 function NutritionScreen({ nutrition }) {
   const [selectedMeal, setSelectedMeal] = useState(null);
   const [selectedSupplement, setSelectedSupplement] = useState(null);
- 
+
   // Base de connaissances suppléments
   const supplementInfo = {
     "whey protein": { color: "#E63626", benefits: "Favorise la synthèse protéique musculaire après l'effort. Accélère la récupération en apportant des acides aminés rapidement assimilables. Idéale dans les 30 minutes suivant une séance intense.", dosage: "25-30g dans un shaker avec de l'eau ou du lait végétal.", timing: "Après la séance" },
@@ -274,12 +301,12 @@ function NutritionScreen({ nutrition }) {
     "zinc": { color: "#B8B8BF", benefits: "Soutient le système immunitaire et la récupération. Joue un rôle dans la synthèse de testostérone et la réparation tissulaire.", dosage: "15-30mg par jour.", timing: "Le soir" },
     "fer": { color: "#E63626", benefits: "Essentiel pour le transport de l'oxygène dans le sang. Les sportifs d'endurance ont des besoins accrus en fer. Une carence entraîne fatigue et baisse de performance.", dosage: "Selon bilan sanguin. Ne pas supplémenter sans avis médical.", timing: "Le matin à jeun" },
   };
- 
+
   function getSupplementDetail(name) {
     const key = Object.keys(supplementInfo).find(k => name.toLowerCase().includes(k));
     return key ? supplementInfo[key] : { color: "#B8B8BF", benefits: "Complément alimentaire qui soutient ta performance et ta récupération sportive.", dosage: "Selon les recommandations du fabricant.", timing: "Selon les recommandations" };
   }
- 
+
   // Vue détail d'un supplément
   if (selectedSupplement !== null) {
     const s = nutrition.supplements[selectedSupplement];
@@ -287,7 +314,7 @@ function NutritionScreen({ nutrition }) {
     return (
       <div style={{ padding: "0 20px 24px" }}>
         <button onClick={() => setSelectedSupplement(null)} style={{ background: "none", border: "none", color: C.g2, fontSize: 13, padding: 0, marginBottom: 16, cursor: "pointer" }}>← Retour à la nutrition</button>
- 
+
         <div style={{
           background: `linear-gradient(135deg,${C.card} 0%,${detail.color}11 100%)`,
           borderRadius: 16, padding: 20, marginBottom: 16,
@@ -303,7 +330,7 @@ function NutritionScreen({ nutrition }) {
             </div>
           </div>
         </div>
- 
+
         <div style={{ background: C.card, borderRadius: 14, padding: 18, marginBottom: 8, border: `1px solid ${C.border}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
             <span style={{ fontSize: 16 }}>💪</span>
@@ -311,7 +338,7 @@ function NutritionScreen({ nutrition }) {
           </div>
           <p style={{ fontSize: 13, color: C.white, margin: 0, lineHeight: 1.7 }}>{detail.benefits}</p>
         </div>
- 
+
         <div style={{ background: C.card, borderRadius: 14, padding: 18, marginBottom: 8, border: `1px solid ${C.border}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
             <span style={{ fontSize: 16 }}>💊</span>
@@ -319,7 +346,7 @@ function NutritionScreen({ nutrition }) {
           </div>
           <p style={{ fontSize: 13, color: C.white, margin: 0, lineHeight: 1.7 }}>{detail.dosage}</p>
         </div>
- 
+
         <div style={{ background: C.card, borderRadius: 14, padding: 18, border: `1px solid ${C.border}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
             <span style={{ fontSize: 16 }}>⏰</span>
@@ -330,14 +357,14 @@ function NutritionScreen({ nutrition }) {
       </div>
     );
   }
- 
+
   // Vue détail d'un repas
   if (selectedMeal !== null) {
     const m = nutrition.meals[selectedMeal];
     return (
       <div style={{ padding: "0 20px 24px" }}>
         <button onClick={() => setSelectedMeal(null)} style={{ background: "none", border: "none", color: C.g2, fontSize: 13, padding: 0, marginBottom: 16, cursor: "pointer" }}>← Retour à la nutrition</button>
- 
+
         {/* Header du repas */}
         <div style={{
           background: `linear-gradient(135deg,${C.card} 0%,#18140E 100%)`,
@@ -364,7 +391,7 @@ function NutritionScreen({ nutrition }) {
             )}
           </div>
         </div>
- 
+
         {/* Ingrédients */}
         {m.ingredients && (
           <div style={{ background: C.card, borderRadius: 14, padding: 18, marginBottom: 8, border: `1px solid ${C.border}` }}>
@@ -375,7 +402,7 @@ function NutritionScreen({ nutrition }) {
             <p style={{ fontSize: 13, color: C.white, margin: 0, lineHeight: 1.7 }}>{m.ingredients}</p>
           </div>
         )}
- 
+
         {/* Recette */}
         {m.recette && (
           <div style={{ background: C.card, borderRadius: 14, padding: 18, marginBottom: 8, border: `1px solid ${C.border}` }}>
@@ -386,7 +413,7 @@ function NutritionScreen({ nutrition }) {
             <p style={{ fontSize: 13, color: C.white, margin: 0, lineHeight: 1.7, whiteSpace: "pre-line" }}>{m.recette}</p>
           </div>
         )}
- 
+
         {/* Contenu brut si pas de recette structurée */}
         {!m.recette && m.contenuBrut && (
           <div style={{ background: C.card, borderRadius: 14, padding: 18, marginBottom: 8, border: `1px solid ${C.border}` }}>
@@ -400,7 +427,7 @@ function NutritionScreen({ nutrition }) {
       </div>
     );
   }
- 
+
   // Vue liste principale
   return (
     <div style={{ padding: "0 20px 24px" }}>
@@ -408,7 +435,7 @@ function NutritionScreen({ nutrition }) {
         <h1 style={{ fontSize: 24, fontWeight: 800, color: C.white, margin: 0, fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1.5 }}>NUTRITION</h1>
         <p style={{ fontSize: 13, color: C.g2, margin: "4px 0 0" }}>{nutrition.titre || "Menu du jour"}</p>
       </div>
- 
+
       <div style={{ background: `linear-gradient(135deg,${C.card} 0%,#18140E 100%)`, borderRadius: 16, padding: 20, marginBottom: 16, border: `1px solid ${C.yellow}22` }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
           <div>
@@ -423,7 +450,7 @@ function NutritionScreen({ nutrition }) {
           <MacroBar label="Lipides" value={nutrition.lipides || 0} max={100} color={C.blue} />
         </div>
       </div>
- 
+
       {nutrition.meals.map((m, i) => (
         <div key={i} onClick={() => setSelectedMeal(i)} style={{ background: C.card, borderRadius: 14, padding: 18, marginBottom: 8, border: `1px solid ${C.border}`, cursor: "pointer" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -445,7 +472,7 @@ function NutritionScreen({ nutrition }) {
           </div>
         </div>
       ))}
- 
+
       <div style={{ background: C.card, borderRadius: 14, padding: 18, marginTop: 8, border: `1px solid ${C.border}` }}>
         <h3 style={{ fontSize: 11, fontWeight: 700, color: C.g2, margin: "0 0 14px", textTransform: "uppercase", letterSpacing: 1.5 }}>💊 Supplémentation</h3>
         {nutrition.supplements.map((s, i) => (
@@ -464,20 +491,20 @@ function NutritionScreen({ nutrition }) {
     </div>
   );
 }
- 
+
 // ─── ÉCRAN BILAN ─────────────────────────────────────
- 
+
 function BilanScreen({ sessions, etat }) {
   const intensities = sessions.map(s => s.intensity);
   const maxI = Math.max(...intensities);
- 
+
   return (
     <div style={{ padding: "0 20px 24px" }}>
       <div style={{ marginBottom: 20 }}>
         <h1 style={{ fontSize: 24, fontWeight: 800, color: C.white, margin: 0, fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1.5 }}>BILAN HEBDO</h1>
         <p style={{ fontSize: 13, color: C.g2, margin: "4px 0 0" }}>Semaine 14 — Analyse IA du coach</p>
       </div>
- 
+
       <div style={{ background: `linear-gradient(135deg,${C.card} 0%,#0E1A12 100%)`, borderRadius: 16, padding: 20, marginBottom: 16, border: `1px solid ${C.green}22`, display: "flex", alignItems: "center", gap: 20 }}>
         <CircularProgress value={78} max={100} size={72} stroke={5} color={C.green} />
         <div>
@@ -486,7 +513,7 @@ function BilanScreen({ sessions, etat }) {
           <p style={{ fontSize: 12, color: C.g1, margin: 0 }}>OK pour augmenter l'intensité</p>
         </div>
       </div>
- 
+
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 16 }}>
         {[ {l:"Volume",v:"48.8 km",c:C.accent,i:"🏔️"}, {l:"Dénivelé",v:"915 m D+",c:C.yellow,i:"📈"}, {l:"Durée totale",v:"7h12",c:C.blue,i:"⏱️"}, {l:"FC moyenne",v:"146 bpm",c:C.accentSoft,i:"❤️"} ].map((s,i) => (
           <div key={i} style={{ background: C.card, borderRadius: 12, padding: "14px 16px", border: `1px solid ${C.border}` }}>
@@ -498,7 +525,7 @@ function BilanScreen({ sessions, etat }) {
           </div>
         ))}
       </div>
- 
+
       <div style={{ background: C.card, borderRadius: 14, padding: 18, marginBottom: 16, border: `1px solid ${C.border}` }}>
         <h3 style={{ fontSize: 11, fontWeight: 700, color: C.g2, margin: "0 0 16px", textTransform: "uppercase", letterSpacing: 1.5 }}>Charge d'intensité</h3>
         <div style={{ display: "flex", alignItems: "flex-end", gap: 6, height: 80 }}>
@@ -510,7 +537,7 @@ function BilanScreen({ sessions, etat }) {
           ))}
         </div>
       </div>
- 
+
       <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
         {[ {l:"Fatigue",v:etat.fatigue,c:C.yellow}, {l:"Motivation",v:etat.motivation,c:C.green}, {l:"Douleurs",v:etat.douleurs,c:C.green} ].map((s,i) => (
           <div key={i} style={{ flex: 1, background: C.card, borderRadius: 12, padding: 16, border: `1px solid ${C.border}`, textAlign: "center" }}>
@@ -519,7 +546,7 @@ function BilanScreen({ sessions, etat }) {
           </div>
         ))}
       </div>
- 
+
       <div style={{ background: C.card, borderRadius: 14, padding: 18, border: `1px solid ${C.border}` }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
           <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(230,54,38,0.12)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>🤖</div>
@@ -534,9 +561,9 @@ function BilanScreen({ sessions, etat }) {
     </div>
   );
 }
- 
+
 // ─── ÉCRAN PROFIL ────────────────────────────────────
- 
+
 function ProfileScreen() {
   return (
     <div style={{ padding: "0 20px 24px" }}>
@@ -545,7 +572,7 @@ function ProfileScreen() {
         <h2 style={{ fontSize: 22, fontWeight: 800, color: C.white, margin: 0, fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1 }}>GEOFFREY</h2>
         <p style={{ fontSize: 13, color: C.g2, margin: "4px 0 0" }}>Athlète OCR — Metz</p>
       </div>
- 
+
       <div style={{ background: C.card, borderRadius: 14, padding: 18, marginBottom: 12, border: `1px solid ${C.border}` }}>
         <h3 style={{ fontSize: 11, fontWeight: 700, color: C.g2, margin: "0 0 14px", textTransform: "uppercase", letterSpacing: 1.5 }}>Profil athlète</h3>
         {[ {l:"Objectif",v:"Spartan Ultra"}, {l:"Âge",v:"41 ans"}, {l:"Expérience OCR",v:"Confirmé"}, {l:"Montre",v:"Garmin"}, {l:"Métabolisme de base",v:"1 850 kcal"} ].map((item,i) => (
@@ -555,7 +582,7 @@ function ProfileScreen() {
           </div>
         ))}
       </div>
- 
+
       <div style={{ background: C.card, borderRadius: 14, padding: 18, marginBottom: 12, border: `1px solid ${C.border}` }}>
         <h3 style={{ fontSize: 11, fontWeight: 700, color: C.g2, margin: "0 0 14px", textTransform: "uppercase", letterSpacing: 1.5 }}>Connexions</h3>
         {[ {n:"Strava",s:"Connecté",c:C.green}, {n:"Garmin Connect",s:"Connecté",c:C.green}, {n:"Apple Health",s:"Non connecté",c:C.g2} ].map((c,i) => (
@@ -565,7 +592,7 @@ function ProfileScreen() {
           </div>
         ))}
       </div>
- 
+
       <div style={{ background: `linear-gradient(135deg,${C.accent}15,${C.card})`, borderRadius: 14, padding: 18, border: `1px solid ${C.accent}22`, textAlign: "center" }}>
         <p style={{ fontSize: 10, color: C.accent, fontWeight: 700, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 4px" }}>Spartan Intelligence</p>
         <p style={{ fontSize: 11, color: C.g2, margin: 0 }}>v1.0 — Powered by AI</p>
@@ -573,16 +600,29 @@ function ProfileScreen() {
     </div>
   );
 }
- 
+
 // ─── APPLICATION PRINCIPALE ──────────────────────────
- 
+
 export default function Home() {
   const [tab, setTab] = useState(0);
   const [sessions, setSessions] = useState(DEMO_SESSIONS);
   const [nutrition, setNutrition] = useState(DEMO_NUTRITION);
   const [etat, setEtat] = useState(DEMO_ETAT);
   const [isLive, setIsLive] = useState(false);
- 
+  const [planSelected, setPlanSelected] = useState(null);
+
+  // Navigation depuis l'accueil
+  function handleNavigate(target, index) {
+    if (target === "plan") {
+      setPlanSelected(index !== undefined ? index : null);
+      setTab(1);
+    } else if (target === "nutrition") {
+      setTab(2);
+    } else if (target === "bilan") {
+      setTab(3);
+    }
+  }
+
   // Transforme les données Notion en format compatible avec l'UI
   function mapNotionSessions(notionData) {
     const jourMap = {
@@ -592,7 +632,7 @@ export default function Home() {
       "thursday": "Jeu", "friday": "Ven", "saturday": "Sam", "sunday": "Dim",
     };
     const typeMap = { "Run": "run", "WeightTraining": "force", "Hiking": "rest" };
- 
+
     return notionData.map((s) => ({
       ...s,
       jour: jourMap[(s.jour || "").toLowerCase()] || s.jour || "?",
@@ -603,18 +643,18 @@ export default function Home() {
       objectif: "",
     }));
   }
- 
+
   // Parse le contenu texte de la page Nutrition Notion en repas structurés
   function parseNutritionContent(contenu) {
     if (!contenu) return { meals: [], supplements: [], calories: 0, proteines: 0, glucides: 0, lipides: 0 };
- 
+
     const lines = contenu.split("\n").filter(Boolean);
     let meals = [];
     let supplements = [];
     let calories = 0, proteines = 0, glucides = 0, lipides = 0;
     let currentMeal = null;
     let currentSection = null;
- 
+
     for (const line of lines) {
       // Parse macros ligne : "Calories : 2450 kcal | P : 180g | G : 250g | L : 85g"
       if (line.includes("Calories") && line.includes("kcal")) {
@@ -628,7 +668,7 @@ export default function Home() {
         if (lMatch) lipides = parseInt(lMatch[1]);
         continue;
       }
- 
+
       // Détecte un repas : "🍳 Déjeuner" ou "🍖 Dîner" ou "Déjeuner" etc.
       const mealMatch = line.match(/^(🍳|🥣|🍖|🥗|🍽️|🌅)?\s*(Petit[ -]?déjeuner|Déjeuner|Dîner|Collation|Snack)/i);
       if (mealMatch) {
@@ -646,14 +686,14 @@ export default function Home() {
         currentSection = "meal";
         continue;
       }
- 
+
       // Détecte la supplémentation
       if (line.includes("Supplémentation") || line.includes("supplémentation")) {
         if (currentMeal) { meals.push(currentMeal); currentMeal = null; }
         currentSection = "supplements";
         continue;
       }
- 
+
       // Parse le contenu selon la section
       if (currentSection === "supplements") {
         // Parse "1. **Whey Protein** : Après la séance - Pour..." ou "**Créatine** : Avant..."
@@ -672,7 +712,7 @@ export default function Home() {
         }
         continue;
       }
- 
+
       if (currentMeal) {
         // Nom du plat : ligne en **gras** ou première ligne après le titre du repas
         if (line.includes("**") && !currentMeal.nom) {
@@ -698,10 +738,10 @@ export default function Home() {
       }
     }
     if (currentMeal) meals.push(currentMeal);
- 
+
     return { meals, supplements, calories, proteines, glucides, lipides };
   }
- 
+
   // Essaie de charger les données depuis Notion au démarrage
   useEffect(() => {
     async function loadData() {
@@ -714,7 +754,7 @@ export default function Home() {
           setSessions(mapped);
           setIsLive(true);
         }
- 
+
         // Charger la nutrition
         try {
           const today = new Date().toISOString().split("T")[0];
@@ -738,7 +778,7 @@ export default function Home() {
         } catch (e) {
           console.log("Nutrition: mode démo");
         }
- 
+
         // Charger l'état de la semaine
         try {
           const resEtat = await fetch("/api/etat-semaine");
@@ -753,14 +793,14 @@ export default function Home() {
         } catch (e) {
           console.log("État semaine: mode démo");
         }
- 
+
       } catch (e) {
         console.log("Mode démo (Notion non connecté)");
       }
     }
     loadData();
   }, []);
- 
+
   const tabs = [
     { icon: "home", label: "Accueil" },
     { icon: "calendar", label: "Plan" },
@@ -768,15 +808,15 @@ export default function Home() {
     { icon: "chart", label: "Bilan" },
     { icon: "user", label: "Profil" },
   ];
- 
+
   const screens = [
-    <DashboardScreen key={0} sessions={sessions} nutrition={nutrition} etat={etat} />,
-    <PlanScreen key={1} sessions={sessions} />,
+    <DashboardScreen key={0} sessions={sessions} nutrition={nutrition} etat={etat} onNavigate={handleNavigate} />,
+    <PlanScreen key={1} sessions={sessions} initialSelected={planSelected} />,
     <NutritionScreen key={2} nutrition={nutrition} />,
     <BilanScreen key={3} sessions={sessions} etat={etat} />,
     <ProfileScreen key={4} />,
   ];
- 
+
   return (
     <>
       <Head>
@@ -787,7 +827,7 @@ export default function Home() {
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <link rel="manifest" href="/manifest.json" />
       </Head>
- 
+
       <div style={{ maxWidth: 390, margin: "0 auto", background: C.bg, minHeight: "100vh", position: "relative" }}>
         {/* Status bar */}
         <div style={{ padding: "12px 20px 8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -797,7 +837,7 @@ export default function Home() {
             {isLive && <span style={{ fontSize: 9, background: C.green+"33", color: C.green, padding: "2px 6px", borderRadius: 4, fontWeight: 700 }}>LIVE</span>}
           </div>
         </div>
- 
+
         {/* Header */}
         <div style={{ padding: "8px 20px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -807,14 +847,14 @@ export default function Home() {
             <p style={{ fontSize: 10, color: C.g2, margin: 0, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1.5 }}>Spartan Intelligence</p>
           </div>
         </div>
- 
+
         {/* Contenu */}
         <div style={{ paddingBottom: 80 }}>{screens[tab]}</div>
- 
+
         {/* Barre de navigation */}
         <div style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 390, background: "rgba(10,10,12,0.92)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", borderTop: `1px solid ${C.border}`, display: "flex", justifyContent: "space-around", padding: "8px 0 24px" }}>
           {tabs.map((t, i) => (
-            <button key={i} onClick={() => setTab(i)} style={{ background: "none", border: "none", padding: "6px 12px", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, cursor: "pointer", position: "relative" }}>
+            <button key={i} onClick={() => { setTab(i); if (i !== 1) setPlanSelected(null); }} style={{ background: "none", border: "none", padding: "6px 12px", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, cursor: "pointer", position: "relative" }}>
               {tab===i && <div style={{ position: "absolute", top: -8, width: 20, height: 2, background: C.accent, borderRadius: 1 }} />}
               <Icon name={t.icon} active={tab===i} />
               <span style={{ fontSize: 10, color: tab===i?C.accent:C.g2, fontWeight: tab===i?700:500, letterSpacing: 0.5 }}>{t.label}</span>
@@ -825,4 +865,3 @@ export default function Home() {
     </>
   );
 }
- 
