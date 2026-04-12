@@ -115,7 +115,13 @@ function Icon({ name, active }) {
 
 // ─── ÉCRAN ACCUEIL ───────────────────────────────────
 
-function DashboardScreen({ sessions, nutrition, etat, onNavigate }) {
+function DashboardScreen({ sessions, nutrition, etat, onNavigate, onSaveEtat }) {
+  const [ressentiOpen, setRessentiOpen] = useState(false);
+  const [fatigue, setFatigue] = useState(etat.fatigue || 5);
+  const [motivation, setMotivation] = useState(etat.motivation || 5);
+  const [douleurs, setDouleurs] = useState(etat.douleurs || 2);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const now = new Date();
   const joursSemaine = ["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"];
   const mois = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
@@ -213,6 +219,119 @@ function DashboardScreen({ sessions, nutrition, etat, onNavigate }) {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.yellow} strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
       </div>
+
+      {/* Mon ressenti */}
+      <div style={{ background: C.card, borderRadius: 16, padding: 20, border: `1px solid ${C.border}`, marginTop: 16 }}>
+        <div onClick={() => setRessentiOpen(!ressentiOpen)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}>
+          <h3 style={{ fontSize: 12, fontWeight: 700, color: C.g2, margin: 0, textTransform: "uppercase", letterSpacing: 1.5 }}>📋 Mon ressenti</h3>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {!ressentiOpen && (
+              <div style={{ display: "flex", gap: 10 }}>
+                <span style={{ fontSize: 11, color: fatigue<=4?C.green:fatigue<=6?C.yellow:C.accent, fontWeight: 700 }}>F:{fatigue}</span>
+                <span style={{ fontSize: 11, color: C.green, fontWeight: 700 }}>M:{motivation}</span>
+                <span style={{ fontSize: 11, color: douleurs<=3?C.green:douleurs<=6?C.yellow:C.accent, fontWeight: 700 }}>D:{douleurs}</span>
+              </div>
+            )}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.g2} strokeWidth="2" style={{ transform: ressentiOpen ? "rotate(90deg)" : "none", transition: "transform 0.2s" }}><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
+
+        {ressentiOpen && (
+          <div style={{ marginTop: 16 }}>
+            {saved && (
+              <div style={{ background: `${C.green}22`, border: `1px solid ${C.green}44`, borderRadius: 10, padding: "8px 12px", marginBottom: 14, textAlign: "center" }}>
+                <span style={{ color: C.green, fontSize: 12, fontWeight: 600 }}>✓ Ressenti sauvegardé</span>
+              </div>
+            )}
+
+            {/* Fatigue */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <span style={{ fontSize: 12, color: C.g1, fontWeight: 600 }}>Fatigue</span>
+                <span style={{ fontSize: 18, fontWeight: 800, color: fatigue<=4?C.green:fatigue<=6?C.yellow:C.accent, fontFamily: "'Bebas Neue',sans-serif" }}>{fatigue}<span style={{ fontSize: 11, color: C.g2 }}>/10</span></span>
+              </div>
+              <div style={{ display: "flex", gap: 4 }}>
+                {[1,2,3,4,5,6,7,8,9,10].map(v => (
+                  <div key={v} onClick={() => setFatigue(v)} style={{
+                    flex: 1, height: 28, borderRadius: 6, cursor: "pointer",
+                    background: v <= fatigue ? (fatigue<=4 ? C.green : fatigue<=6 ? C.yellow : C.accent) : C.g3,
+                    opacity: v <= fatigue ? 1 : 0.3,
+                    transition: "all 0.15s",
+                  }} />
+                ))}
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
+                <span style={{ fontSize: 9, color: C.g2 }}>Frais</span>
+                <span style={{ fontSize: 9, color: C.g2 }}>Épuisé</span>
+              </div>
+            </div>
+
+            {/* Motivation */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <span style={{ fontSize: 12, color: C.g1, fontWeight: 600 }}>Motivation</span>
+                <span style={{ fontSize: 18, fontWeight: 800, color: C.green, fontFamily: "'Bebas Neue',sans-serif" }}>{motivation}<span style={{ fontSize: 11, color: C.g2 }}>/10</span></span>
+              </div>
+              <div style={{ display: "flex", gap: 4 }}>
+                {[1,2,3,4,5,6,7,8,9,10].map(v => (
+                  <div key={v} onClick={() => setMotivation(v)} style={{
+                    flex: 1, height: 28, borderRadius: 6, cursor: "pointer",
+                    background: v <= motivation ? C.green : C.g3,
+                    opacity: v <= motivation ? 1 : 0.3,
+                    transition: "all 0.15s",
+                  }} />
+                ))}
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
+                <span style={{ fontSize: 9, color: C.g2 }}>Basse</span>
+                <span style={{ fontSize: 9, color: C.g2 }}>À bloc</span>
+              </div>
+            </div>
+
+            {/* Douleurs */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <span style={{ fontSize: 12, color: C.g1, fontWeight: 600 }}>Douleurs</span>
+                <span style={{ fontSize: 18, fontWeight: 800, color: douleurs<=3?C.green:douleurs<=6?C.yellow:C.accent, fontFamily: "'Bebas Neue',sans-serif" }}>{douleurs}<span style={{ fontSize: 11, color: C.g2 }}>/10</span></span>
+              </div>
+              <div style={{ display: "flex", gap: 4 }}>
+                {[1,2,3,4,5,6,7,8,9,10].map(v => (
+                  <div key={v} onClick={() => setDouleurs(v)} style={{
+                    flex: 1, height: 28, borderRadius: 6, cursor: "pointer",
+                    background: v <= douleurs ? (douleurs<=3 ? C.green : douleurs<=6 ? C.yellow : C.accent) : C.g3,
+                    opacity: v <= douleurs ? 1 : 0.3,
+                    transition: "all 0.15s",
+                  }} />
+                ))}
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
+                <span style={{ fontSize: 9, color: C.g2 }}>Aucune</span>
+                <span style={{ fontSize: 9, color: C.g2 }}>Intense</span>
+              </div>
+            </div>
+
+            {/* Bouton sauvegarder */}
+            <button onClick={async () => {
+              setSaving(true);
+              setSaved(false);
+              try {
+                await onSaveEtat({ fatigue, motivation, douleurs });
+                setSaved(true);
+                setTimeout(() => { setSaved(false); setRessentiOpen(false); }, 2000);
+              } catch (e) {
+                alert("Erreur lors de la sauvegarde");
+              }
+              setSaving(false);
+            }} disabled={saving} style={{
+              width: "100%", padding: "12px 0", background: saving ? C.g3 : C.accent, border: "none",
+              borderRadius: 10, color: "#fff", fontSize: 13, fontWeight: 700, cursor: saving ? "wait" : "pointer",
+              textTransform: "uppercase", letterSpacing: 1,
+            }}>
+              {saving ? "Sauvegarde..." : "Enregistrer mon ressenti"}
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -290,7 +409,7 @@ function PlanScreen({ sessions, initialSelected }) {
           <div style={{ flex: 1 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <span style={{ fontSize: 11, color: C.g2, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>{s.jour}</span>
-              {false && <span style={{ fontSize: 9, background: C.accent, color: "#fff", padding: "2px 6px", borderRadius: 4, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>Aujourd'hui</span>}
+              {i===5 && <span style={{ fontSize: 9, background: C.accent, color: "#fff", padding: "2px 6px", borderRadius: 4, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>Aujourd'hui</span>}
             </div>
             <p style={{ fontSize: 15, color: C.white, fontWeight: 700, margin: "3px 0 0" }}>{s.nom}</p>
           </div>
@@ -574,15 +693,6 @@ function BilanScreen({ sessions, etat, bilan }) {
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-        {[ {l:"Fatigue",v:etat.fatigue,c:etat.fatigue<=4?C.green:etat.fatigue<=6?C.yellow:C.accent}, {l:"Motivation",v:etat.motivation,c:C.green}, {l:"Douleurs",v:etat.douleurs,c:etat.douleurs<=3?C.green:etat.douleurs<=6?C.yellow:C.accent} ].map((s,i) => (
-          <div key={i} style={{ flex: 1, background: C.card, borderRadius: 12, padding: 16, border: `1px solid ${C.border}`, textAlign: "center" }}>
-            <span style={{ fontSize: 10, color: C.g2, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>{s.l}</span>
-            <p style={{ fontSize: 28, fontWeight: 800, color: s.c, margin: "6px 0 0", fontFamily: "'Bebas Neue',sans-serif" }}>{s.v}<span style={{ fontSize: 14, color: C.g2 }}>/10</span></p>
-          </div>
-        ))}
-      </div>
-
       <div style={{ background: C.card, borderRadius: 14, padding: 18, border: `1px solid ${C.border}` }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
           <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(230,54,38,0.12)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>🤖</div>
@@ -612,18 +722,243 @@ function BilanScreen({ sessions, etat, bilan }) {
 // ─── ÉCRAN PROFIL ────────────────────────────────────
 
 function ProfileScreen() {
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [profil, setProfil] = useState({
+    nom: "", age: "", poids: "", taille: "", objectif: "Spartan Beast",
+    experienceOCR: "Intermédiaire", metabolismeBase: "", frequence: "5 séances/semaine",
+    allergies: "", montre: "Garmin", ville: "",
+  });
+
+  // Charger le profil au montage
+  useEffect(() => {
+    async function loadProfil() {
+      try {
+        const res = await fetch("/api/profil");
+        const data = await res.json();
+        if (data.success && data.data) {
+          setProfil({
+            nom: data.data.nom || "",
+            age: data.data.age || "",
+            poids: data.data.poids || "",
+            taille: data.data.taille || "",
+            objectif: data.data.objectif || "Spartan Beast",
+            experienceOCR: data.data.experienceOCR || "Intermédiaire",
+            metabolismeBase: data.data.metabolismeBase || "",
+            frequence: data.data.frequence || "5 séances/semaine",
+            allergies: data.data.allergies || "",
+            montre: data.data.montre || "Garmin",
+            ville: data.data.ville || "",
+          });
+        }
+      } catch (e) {
+        console.log("Profil: mode démo");
+      }
+    }
+    loadProfil();
+  }, []);
+
+  // Sauvegarder le profil
+  async function saveProfil() {
+    setSaving(true);
+    setSaved(false);
+    try {
+      await fetch("/api/profil", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(profil),
+      });
+      setSaved(true);
+      setEditing(false);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (e) {
+      alert("Erreur lors de la sauvegarde");
+    }
+    setSaving(false);
+  }
+
+  function update(field, value) {
+    setProfil(prev => ({ ...prev, [field]: value }));
+  }
+
+  const inputStyle = {
+    width: "100%", padding: "10px 14px", background: C.card, border: `1px solid ${C.border}`,
+    borderRadius: 10, color: C.white, fontSize: 14, outline: "none", fontFamily: "'DM Sans',sans-serif",
+  };
+
+  const selectStyle = { ...inputStyle, appearance: "none", WebkitAppearance: "none" };
+
+  const labelStyle = {
+    fontSize: 11, color: C.g2, fontWeight: 700, textTransform: "uppercase",
+    letterSpacing: 1, marginBottom: 6, display: "block",
+  };
+
+  // Calcul automatique du métabolisme de base (Harris-Benedict)
+  const calculerMB = () => {
+    if (profil.poids && profil.taille && profil.age) {
+      const mb = Math.round(88.362 + (13.397 * profil.poids) + (4.799 * profil.taille) - (5.677 * profil.age));
+      update("metabolismeBase", mb);
+    }
+  };
+
+  if (editing) {
+    return (
+      <div style={{ padding: "0 20px 24px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: C.white, margin: 0, fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1.5 }}>MODIFIER PROFIL</h1>
+          <button onClick={() => setEditing(false)} style={{ background: "none", border: "none", color: C.g2, fontSize: 13, cursor: "pointer" }}>Annuler</button>
+        </div>
+
+        {/* Identité */}
+        <div style={{ background: C.card, borderRadius: 14, padding: 18, marginBottom: 12, border: `1px solid ${C.border}` }}>
+          <h3 style={{ fontSize: 11, fontWeight: 700, color: C.accent, margin: "0 0 16px", textTransform: "uppercase", letterSpacing: 1.5 }}>👤 Identité</h3>
+          
+          <div style={{ marginBottom: 14 }}>
+            <label style={labelStyle}>Prénom</label>
+            <input style={inputStyle} value={profil.nom} onChange={e => update("nom", e.target.value)} placeholder="Ton prénom" />
+          </div>
+          <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
+            <div style={{ flex: 1 }}>
+              <label style={labelStyle}>Âge</label>
+              <input style={inputStyle} type="number" value={profil.age} onChange={e => update("age", e.target.value)} placeholder="41" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={labelStyle}>Ville</label>
+              <input style={inputStyle} value={profil.ville} onChange={e => update("ville", e.target.value)} placeholder="Metz" />
+            </div>
+          </div>
+        </div>
+
+        {/* Mensurations */}
+        <div style={{ background: C.card, borderRadius: 14, padding: 18, marginBottom: 12, border: `1px solid ${C.border}` }}>
+          <h3 style={{ fontSize: 11, fontWeight: 700, color: C.yellow, margin: "0 0 16px", textTransform: "uppercase", letterSpacing: 1.5 }}>📏 Mensurations</h3>
+          
+          <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
+            <div style={{ flex: 1 }}>
+              <label style={labelStyle}>Poids (kg)</label>
+              <input style={inputStyle} type="number" value={profil.poids} onChange={e => update("poids", e.target.value)} placeholder="80" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={labelStyle}>Taille (cm)</label>
+              <input style={inputStyle} type="number" value={profil.taille} onChange={e => update("taille", e.target.value)} placeholder="178" />
+            </div>
+          </div>
+          <div style={{ marginBottom: 14 }}>
+            <label style={labelStyle}>Métabolisme de base (kcal)</label>
+            <div style={{ display: "flex", gap: 8 }}>
+              <input style={{ ...inputStyle, flex: 1 }} type="number" value={profil.metabolismeBase} onChange={e => update("metabolismeBase", e.target.value)} placeholder="1850" />
+              <button onClick={calculerMB} style={{ background: C.accent, border: "none", borderRadius: 10, padding: "0 14px", color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>Auto</button>
+            </div>
+            <p style={{ fontSize: 10, color: C.g2, margin: "4px 0 0" }}>Clique "Auto" pour calculer depuis ton âge, poids et taille</p>
+          </div>
+        </div>
+
+        {/* Objectifs sportifs */}
+        <div style={{ background: C.card, borderRadius: 14, padding: 18, marginBottom: 12, border: `1px solid ${C.border}` }}>
+          <h3 style={{ fontSize: 11, fontWeight: 700, color: C.green, margin: "0 0 16px", textTransform: "uppercase", letterSpacing: 1.5 }}>🎯 Objectifs sportifs</h3>
+          
+          <div style={{ marginBottom: 14 }}>
+            <label style={labelStyle}>Objectif course</label>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              {["Spartan Sprint", "Spartan Super", "Spartan Beast", "Spartan Ultra", "Trail court", "Trail long", "Ultra-trail"].map(opt => (
+                <button key={opt} onClick={() => update("objectif", opt)} style={{
+                  padding: "8px 14px", borderRadius: 8, border: `1px solid ${profil.objectif === opt ? C.accent : C.border}`,
+                  background: profil.objectif === opt ? `${C.accent}22` : C.card,
+                  color: profil.objectif === opt ? C.accent : C.g1, fontSize: 12, fontWeight: 600, cursor: "pointer",
+                }}>{opt}</button>
+              ))}
+            </div>
+          </div>
+          <div style={{ marginBottom: 14 }}>
+            <label style={labelStyle}>Expérience OCR</label>
+            <div style={{ display: "flex", gap: 6 }}>
+              {["Débutant", "Intermédiaire", "Confirmé", "Expert"].map(opt => (
+                <button key={opt} onClick={() => update("experienceOCR", opt)} style={{
+                  flex: 1, padding: "8px 0", borderRadius: 8, border: `1px solid ${profil.experienceOCR === opt ? C.blue : C.border}`,
+                  background: profil.experienceOCR === opt ? `${C.blue}22` : C.card,
+                  color: profil.experienceOCR === opt ? C.blue : C.g1, fontSize: 12, fontWeight: 600, cursor: "pointer", textAlign: "center",
+                }}>{opt}</button>
+              ))}
+            </div>
+          </div>
+          <div style={{ marginBottom: 14 }}>
+            <label style={labelStyle}>Fréquence d'entraînement</label>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              {["3 séances/semaine", "4 séances/semaine", "5 séances/semaine", "6 séances/semaine", "7 séances/semaine"].map(opt => (
+                <button key={opt} onClick={() => update("frequence", opt)} style={{
+                  padding: "8px 12px", borderRadius: 8, border: `1px solid ${profil.frequence === opt ? C.green : C.border}`,
+                  background: profil.frequence === opt ? `${C.green}22` : C.card,
+                  color: profil.frequence === opt ? C.green : C.g1, fontSize: 12, fontWeight: 600, cursor: "pointer",
+                }}>{opt}</button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Nutrition & Équipement */}
+        <div style={{ background: C.card, borderRadius: 14, padding: 18, marginBottom: 12, border: `1px solid ${C.border}` }}>
+          <h3 style={{ fontSize: 11, fontWeight: 700, color: C.blue, margin: "0 0 16px", textTransform: "uppercase", letterSpacing: 1.5 }}>🍽️ Nutrition & Équipement</h3>
+          
+          <div style={{ marginBottom: 14 }}>
+            <label style={labelStyle}>Allergies / Régime alimentaire</label>
+            <input style={inputStyle} value={profil.allergies} onChange={e => update("allergies", e.target.value)} placeholder="Aucune, sans gluten, végétarien..." />
+          </div>
+          <div>
+            <label style={labelStyle}>Montre connectée</label>
+            <div style={{ display: "flex", gap: 6 }}>
+              {["Garmin", "Apple Watch", "Suunto", "Coros", "Polar", "Autre"].map(opt => (
+                <button key={opt} onClick={() => update("montre", opt)} style={{
+                  flex: 1, padding: "8px 0", borderRadius: 8, border: `1px solid ${profil.montre === opt ? C.yellow : C.border}`,
+                  background: profil.montre === opt ? `${C.yellow}22` : C.card,
+                  color: profil.montre === opt ? C.yellow : C.g1, fontSize: 11, fontWeight: 600, cursor: "pointer", textAlign: "center",
+                }}>{opt}</button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Bouton sauvegarder */}
+        <button onClick={saveProfil} disabled={saving} style={{
+          width: "100%", padding: "16px 0", background: saving ? C.g3 : C.accent, border: "none", borderRadius: 14,
+          color: "#fff", fontSize: 16, fontWeight: 800, cursor: saving ? "wait" : "pointer",
+          fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 2, textTransform: "uppercase",
+        }}>
+          {saving ? "Sauvegarde en cours..." : "Sauvegarder le profil"}
+        </button>
+      </div>
+    );
+  }
+
+  // Vue lecture
   return (
     <div style={{ padding: "0 20px 24px" }}>
       <div style={{ textAlign: "center", marginBottom: 24 }}>
-        <div style={{ width: 80, height: 80, borderRadius: "50%", background: `linear-gradient(135deg,${C.accent},#FF6B5A)`, margin: "0 auto 12px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, fontWeight: 800, color: "#fff", fontFamily: "'Bebas Neue',sans-serif" }}>G</div>
-        <h2 style={{ fontSize: 22, fontWeight: 800, color: C.white, margin: 0, fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1 }}>GEOFFREY</h2>
-        <p style={{ fontSize: 13, color: C.g2, margin: "4px 0 0" }}>Athlète OCR — Metz</p>
+        <div style={{ width: 80, height: 80, borderRadius: "50%", background: `linear-gradient(135deg,${C.accent},#FF6B5A)`, margin: "0 auto 12px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, fontWeight: 800, color: "#fff", fontFamily: "'Bebas Neue',sans-serif" }}>{(profil.nom || "?")[0].toUpperCase()}</div>
+        <h2 style={{ fontSize: 22, fontWeight: 800, color: C.white, margin: 0, fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1 }}>{(profil.nom || "Mon profil").toUpperCase()}</h2>
+        <p style={{ fontSize: 13, color: C.g2, margin: "4px 0 0" }}>{profil.experienceOCR ? `Athlète OCR ${profil.experienceOCR}` : "Athlète OCR"}{profil.ville ? ` — ${profil.ville}` : ""}</p>
       </div>
+
+      {saved && (
+        <div style={{ background: `${C.green}22`, border: `1px solid ${C.green}44`, borderRadius: 12, padding: "12px 16px", marginBottom: 16, textAlign: "center" }}>
+          <span style={{ color: C.green, fontSize: 13, fontWeight: 600 }}>✓ Profil sauvegardé avec succès</span>
+        </div>
+      )}
 
       <div style={{ background: C.card, borderRadius: 14, padding: 18, marginBottom: 12, border: `1px solid ${C.border}` }}>
         <h3 style={{ fontSize: 11, fontWeight: 700, color: C.g2, margin: "0 0 14px", textTransform: "uppercase", letterSpacing: 1.5 }}>Profil athlète</h3>
-        {[ {l:"Objectif",v:"Spartan Ultra"}, {l:"Âge",v:"41 ans"}, {l:"Expérience OCR",v:"Confirmé"}, {l:"Montre",v:"Garmin"}, {l:"Métabolisme de base",v:"1 850 kcal"} ].map((item,i) => (
-          <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: i<4?`1px solid ${C.border}`:"none" }}>
+        {[
+          { l: "Objectif", v: profil.objectif || "—" },
+          { l: "Âge", v: profil.age ? `${profil.age} ans` : "—" },
+          { l: "Poids", v: profil.poids ? `${profil.poids} kg` : "—" },
+          { l: "Taille", v: profil.taille ? `${profil.taille} cm` : "—" },
+          { l: "Expérience OCR", v: profil.experienceOCR || "—" },
+          { l: "Fréquence", v: profil.frequence || "—" },
+          { l: "Métabolisme de base", v: profil.metabolismeBase ? `${profil.metabolismeBase} kcal` : "—" },
+          { l: "Montre", v: profil.montre || "—" },
+          { l: "Allergies", v: profil.allergies || "Aucune" },
+        ].map((item, i) => (
+          <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: i < 8 ? `1px solid ${C.border}` : "none" }}>
             <span style={{ fontSize: 13, color: C.g1 }}>{item.l}</span>
             <span style={{ fontSize: 13, color: C.white, fontWeight: 600 }}>{item.v}</span>
           </div>
@@ -632,13 +967,26 @@ function ProfileScreen() {
 
       <div style={{ background: C.card, borderRadius: 14, padding: 18, marginBottom: 12, border: `1px solid ${C.border}` }}>
         <h3 style={{ fontSize: 11, fontWeight: 700, color: C.g2, margin: "0 0 14px", textTransform: "uppercase", letterSpacing: 1.5 }}>Connexions</h3>
-        {[ {n:"Strava",s:"Connecté",c:C.green}, {n:"Garmin Connect",s:"Connecté",c:C.green}, {n:"Apple Health",s:"Non connecté",c:C.g2} ].map((c,i) => (
-          <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: i<2?`1px solid ${C.border}`:"none" }}>
+        {[
+          { n: "Strava", s: "Connecté", c: C.green },
+          { n: "Garmin Connect", s: "Connecté", c: C.green },
+          { n: "Apple Health", s: "Non connecté", c: C.g2 },
+        ].map((c, i) => (
+          <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: i < 2 ? `1px solid ${C.border}` : "none" }}>
             <span style={{ fontSize: 13, color: C.white }}>{c.n}</span>
             <span style={{ fontSize: 11, color: c.c, fontWeight: 600 }}>{c.s}</span>
           </div>
         ))}
       </div>
+
+      {/* Bouton modifier */}
+      <button onClick={() => setEditing(true)} style={{
+        width: "100%", padding: "14px 0", background: "none", border: `2px solid ${C.accent}`,
+        borderRadius: 14, color: C.accent, fontSize: 14, fontWeight: 800, cursor: "pointer",
+        fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 2, textTransform: "uppercase", marginBottom: 12,
+      }}>
+        Modifier mon profil
+      </button>
 
       <div style={{ background: `linear-gradient(135deg,${C.accent}15,${C.card})`, borderRadius: 14, padding: 18, border: `1px solid ${C.accent}22`, textAlign: "center" }}>
         <p style={{ fontSize: 10, color: C.accent, fontWeight: 700, textTransform: "uppercase", letterSpacing: 2, margin: "0 0 4px" }}>Spartan Intelligence</p>
@@ -932,8 +1280,22 @@ export default function Home() {
     { icon: "user", label: "Profil" },
   ];
 
+  // Sauvegarder le ressenti dans Notion
+  async function handleSaveEtat(data) {
+    const res = await fetch("/api/etat-semaine", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (result.success) {
+      setEtat({ fatigue: data.fatigue, motivation: data.motivation, douleurs: data.douleurs });
+    }
+    return result;
+  }
+
   const screens = [
-    <DashboardScreen key={0} sessions={sessions} nutrition={nutrition} etat={etat} onNavigate={handleNavigate} />,
+    <DashboardScreen key={0} sessions={sessions} nutrition={nutrition} etat={etat} onNavigate={handleNavigate} onSaveEtat={handleSaveEtat} />,
     <PlanScreen key={1} sessions={planSessions} initialSelected={planSelected} />,
     <NutritionScreen key={2} nutrition={nutrition} />,
     <BilanScreen key={3} sessions={sessions} etat={etat} bilan={bilan} />,
