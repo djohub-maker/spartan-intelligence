@@ -35,9 +35,10 @@ const DEMO_SESSIONS = [
 
 const DEMO_NUTRITION = {
   calories: 2450, proteines: 180, glucides: 250, lipides: 85,
+  titre: "Menu du jour",
   meals: [
-    { icon: "🍳", titre: "Déjeuner", nom: "Salade de Quinoa et Poulet Grillé", ingredients: "150g poulet, 100g quinoa, 50g pois chiches, 30g feta, roquette, huile d'olive, citron", kcal: 620, p: 48, g: 55, l: 22 },
-    { icon: "🍖", titre: "Dîner", nom: "Saumon au Four et Légumes Rôtis", ingredients: "150g saumon, 200g patates douces, 100g brocolis, huile d'olive, herbes de Provence", kcal: 580, p: 42, g: 48, l: 24 },
+    { icon: "🍳", titre: "Déjeuner", nom: "Salade de Quinoa et Poulet Grillé", ingredients: "150g de poulet, 100g de quinoa cuit, 50g de pois chiches, 30g de feta, 50g de roquette, 15ml d'huile d'olive, jus d'un citron, épices (sel, poivre, curcuma).", recette: "Grillez le poulet après l'avoir assaisonné. Mélangez quinoa, pois chiches, roquette et feta. Ajoutez le poulet émincé, arrosez de jus de citron et d'huile, mélangez bien.", kcal: 620, p: 48, g: 55, l: 22 },
+    { icon: "🍖", titre: "Dîner", nom: "Saumon au Four et Légumes Rôtis", ingredients: "150g de saumon, 200g de patates douces, 100g de brocolis, 15ml d'huile d'olive, herbes de Provence.", recette: "Assaisonnez le saumon et les légumes avec huile et herbes. Faites cuire au four à 200°C pendant 20 min.", kcal: 580, p: 42, g: 48, l: 24 },
   ],
   supplements: [
     { name: "Whey Protein", timing: "Après la séance", icon: "🥤" },
@@ -99,8 +100,12 @@ function DashboardScreen({ sessions, nutrition, etat, onNavigate }) {
   const joursSemaine = ["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"];
   const mois = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
   const dateStr = `${joursSemaine[now.getDay()]} ${now.getDate()} ${mois[now.getMonth()]}`;
-  const dayIndex = (now.getDay() + 6) % 7; // 0=Lun, 6=Dim
-  const today = sessions[dayIndex] || sessions[0];
+  
+  // Trouver la séance du jour par date
+  const todayDate = now.toISOString().split("T")[0];
+  const todayIndex = sessions.findIndex(s => s.date === todayDate);
+  const today = todayIndex >= 0 ? sessions[todayIndex] : sessions[sessions.length - 1];
+  const todayIdx = todayIndex >= 0 ? todayIndex : 0;
   return (
     <div style={{ padding: "0 20px 24px" }}>
       <div style={{ marginBottom: 24 }}>
@@ -111,7 +116,7 @@ function DashboardScreen({ sessions, nutrition, etat, onNavigate }) {
       </div>
 
       {/* Séance du jour — cliquable */}
-      <div onClick={() => onNavigate("plan", dayIndex)} style={{ background: `linear-gradient(135deg,${C.card} 0%,#1E1215 100%)`, borderRadius: 16, padding: 20, marginBottom: 16, border: `1px solid ${C.accent}33`, position: "relative", overflow: "hidden", cursor: "pointer" }}>
+      <div onClick={() => onNavigate("plan", todayIdx)} style={{ background: `linear-gradient(135deg,${C.card} 0%,#1E1215 100%)`, borderRadius: 16, padding: 20, marginBottom: 16, border: `1px solid ${C.accent}33`, position: "relative", overflow: "hidden", cursor: "pointer" }}>
         <div style={{ position: "absolute", top: -20, right: -20, width: 100, height: 100, background: C.accentGlow, borderRadius: "50%", filter: "blur(40px)" }} />
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, position: "relative" }}>
           <div>
@@ -147,8 +152,8 @@ function DashboardScreen({ sessions, nutrition, etat, onNavigate }) {
         </div>
         <div style={{ display: "flex", gap: 6 }}>
           {sessions.map((s,i) => (
-            <div key={i} onClick={() => onNavigate("plan", i)} style={{ flex: 1, background: s.done ? (s.type==="run" ? "rgba(230,54,38,0.15)" : s.type==="force" ? C.blueSoft : C.greenSoft) : C.card, borderRadius: 10, padding: "10px 0", textAlign: "center", border: i===dayIndex ? `1.5px solid ${C.accent}` : `1px solid ${C.border}`, cursor: "pointer" }}>
-              <p style={{ fontSize: 10, color: i===dayIndex ? C.accent : C.g2, fontWeight: 700, margin: 0, textTransform: "uppercase" }}>{s.jour}</p>
+            <div key={i} onClick={() => onNavigate("plan", i)} style={{ flex: 1, background: s.done ? (s.type==="run" ? "rgba(230,54,38,0.15)" : s.type==="force" ? C.blueSoft : C.greenSoft) : C.card, borderRadius: 10, padding: "10px 0", textAlign: "center", border: i===todayIdx ? `1.5px solid ${C.accent}` : `1px solid ${C.border}`, cursor: "pointer" }}>
+              <p style={{ fontSize: 10, color: i===todayIdx ? C.accent : C.g2, fontWeight: 700, margin: 0, textTransform: "uppercase" }}>{s.jour}</p>
               <div style={{ width: 6, height: 6, borderRadius: "50%", background: s.done ? C.green : C.g3, margin: "6px auto 0" }} />
             </div>
           ))}
@@ -723,21 +728,40 @@ export default function Home() {
           currentMeal.nom = line.replace(/\*/g, "").trim();
           continue;
         }
-        // Ingrédients
+        // Ingrédients (peut être sur plusieurs lignes)
         if (line.toLowerCase().includes("ingrédient")) {
-          currentMeal.ingredients = line.replace(/^-\s*/, "").replace(/^Ingrédients?\s*:\s*/i, "").trim();
+          const content = line.replace(/^-\s*/, "").replace(/^Ingrédients?\s*:\s*/i, "").trim();
+          currentMeal.ingredients = currentMeal.ingredients ? currentMeal.ingredients + " " + content : content;
+          currentMeal._lastField = "ingredients";
           continue;
         }
-        // Recette
+        // Recette (peut être sur plusieurs lignes)
         if (line.toLowerCase().includes("recette")) {
-          currentMeal.recette = line.replace(/^-\s*/, "").replace(/^Recette\s*:\s*/i, "").trim();
+          const content = line.replace(/^-\s*/, "").replace(/^Recette\s*:\s*/i, "").trim();
+          currentMeal.recette = currentMeal.recette ? currentMeal.recette + " " + content : content;
+          currentMeal._lastField = "recette";
+          continue;
+        }
+        // Continuation de la dernière section (ligne qui ne commence pas par un marqueur)
+        if (currentMeal._lastField && line.trim().length > 0 && !line.startsWith("-") && !line.includes("**")) {
+          currentMeal[currentMeal._lastField] += " " + line.trim();
+          continue;
+        }
+        // Ligne avec tiret = potentielle continuation d'ingrédients ou nouvelle info
+        if (line.startsWith("-") && currentMeal._lastField) {
+          const content = line.replace(/^-\s*/, "").trim();
+          currentMeal[currentMeal._lastField] += " " + content;
           continue;
         }
         // Tout le reste va dans contenuBrut
+        currentMeal._lastField = null;
         currentMeal.contenuBrut += line + "\n";
       }
     }
     if (currentMeal) meals.push(currentMeal);
+
+    // Nettoyer les propriétés internes
+    meals = meals.map(m => { const { _lastField, ...rest } = m; return rest; });
 
     return { meals, supplements, calories, proteines, glucides, lipides };
   }
