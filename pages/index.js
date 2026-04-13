@@ -127,11 +127,11 @@ function DashboardScreen({ sessions, nutrition, etat, onNavigate, onSaveEtat }) 
   const mois = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
   const dateStr = `${joursSemaine[now.getDay()]} ${now.getDate()} ${mois[now.getMonth()]}`;
   
-  // Trouver la séance du jour par date
-  const todayDate = now.toISOString().split("T")[0];
+  // Trouver la séance du jour par date (fuseau local, pas UTC)
+  const todayDate = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
   const todayIndex = sessions.findIndex(s => s.date === todayDate);
-  const today = todayIndex >= 0 ? sessions[todayIndex] : sessions[sessions.length - 1];
-  const todayIdx = todayIndex >= 0 ? todayIndex : 0;
+  const today = todayIndex >= 0 ? sessions[todayIndex] : null;
+  const todayIdx = todayIndex >= 0 ? todayIndex : -1;
   return (
     <div style={{ padding: "0 20px 24px" }}>
       <div style={{ marginBottom: 24 }}>
@@ -142,13 +142,14 @@ function DashboardScreen({ sessions, nutrition, etat, onNavigate, onSaveEtat }) 
       </div>
 
       {/* Séance du jour — cliquable */}
+      {today ? (
       <div onClick={() => onNavigate("plan", todayIdx)} style={{ background: `linear-gradient(135deg,${C.card} 0%,#1E1215 100%)`, borderRadius: 16, padding: 20, marginBottom: 16, border: `1px solid ${C.accent}33`, position: "relative", overflow: "hidden", cursor: "pointer" }}>
         <div style={{ position: "absolute", top: -20, right: -20, width: 100, height: 100, background: C.accentGlow, borderRadius: "50%", filter: "blur(40px)" }} />
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, position: "relative" }}>
           <div>
             <span style={{ fontSize: 10, color: C.accent, fontWeight: 700, textTransform: "uppercase", letterSpacing: 2 }}>Séance du jour</span>
-            <h2 style={{ fontSize: 20, fontWeight: 800, color: C.white, margin: "4px 0 0", fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1 }}>{(today?.nom || "Repos").toUpperCase()}</h2>
-            <p style={{ fontSize: 13, color: C.g1, margin: "4px 0 0" }}>{today?.explication ? today.explication.split("\n")[0].replace(/^[🏃💪🧊🏔️]\s*/, "").substring(0, 50) : "Voir le détail"}</p>
+            <h2 style={{ fontSize: 20, fontWeight: 800, color: C.white, margin: "4px 0 0", fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1 }}>{(today.nom || "Repos").toUpperCase()}</h2>
+            <p style={{ fontSize: 13, color: C.g1, margin: "4px 0 0" }}>{today.explication ? today.explication.split("\n")[0].replace(/^[🏃💪🧊🏔️]\s*/, "").substring(0, 50) : "Voir le détail"}</p>
           </div>
           {today?.distance ? <div style={{ background: C.accent, borderRadius: 10, padding: "6px 12px", fontSize: 11, fontWeight: 700, color: "#fff", textTransform: "uppercase", letterSpacing: 1 }}>{Math.round(today.distance * 10) / 10} km</div> : null}
         </div>
@@ -169,20 +170,30 @@ function DashboardScreen({ sessions, nutrition, etat, onNavigate, onSaveEtat }) 
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
       </div>
+      ) : (
+      <div style={{ background: C.card, borderRadius: 16, padding: 20, marginBottom: 16, border: `1px solid ${C.border}`, textAlign: "center" }}>
+        <span style={{ fontSize: 10, color: C.g2, fontWeight: 700, textTransform: "uppercase", letterSpacing: 2 }}>Séance du jour</span>
+        <h2 style={{ fontSize: 20, fontWeight: 800, color: C.green, margin: "8px 0 0", fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1 }}>REPOS</h2>
+        <p style={{ fontSize: 13, color: C.g1, margin: "4px 0 0" }}>Pas de séance programmée aujourd'hui</p>
+      </div>
+      )}
 
       {/* Semaine — jours cliquables */}
       <div style={{ marginBottom: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
           <h3 style={{ fontSize: 13, fontWeight: 700, color: C.white, margin: 0, textTransform: "uppercase", letterSpacing: 1.5 }}>Semaine {getWeekNumber(new Date())}</h3>
-          <span style={{ fontSize: 11, color: C.g2 }}>{sessions.filter(s=>s.done).length}/{sessions.length} séances</span>
+          <span style={{ fontSize: 11, color: C.g2 }}>{sessions.filter(s=>s.done && s.date && s.date <= todayDate).length}/{sessions.length} séances</span>
         </div>
         <div style={{ display: "flex", gap: 6 }}>
-          {sessions.map((s,i) => (
-            <div key={i} onClick={() => onNavigate("plan", i)} style={{ flex: 1, background: s.done ? (s.type==="run" ? "rgba(230,54,38,0.15)" : s.type==="force" ? C.blueSoft : C.greenSoft) : C.card, borderRadius: 10, padding: "10px 0", textAlign: "center", border: i===todayIdx ? `1.5px solid ${C.accent}` : `1px solid ${C.border}`, cursor: "pointer" }}>
+          {sessions.map((s,i) => {
+            const isCompleted = s.done && s.date && s.date <= todayDate;
+            return (
+            <div key={i} onClick={() => onNavigate("plan", i)} style={{ flex: 1, background: isCompleted ? (s.type==="run" ? "rgba(230,54,38,0.15)" : s.type==="force" ? C.blueSoft : C.greenSoft) : C.card, borderRadius: 10, padding: "10px 0", textAlign: "center", border: i===todayIdx ? `1.5px solid ${C.accent}` : `1px solid ${C.border}`, cursor: "pointer" }}>
               <p style={{ fontSize: 10, color: i===todayIdx ? C.accent : C.g2, fontWeight: 700, margin: 0, textTransform: "uppercase" }}>{s.jour}</p>
-              <div style={{ width: 6, height: 6, borderRadius: "50%", background: s.done ? C.green : C.g3, margin: "6px auto 0" }} />
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: isCompleted ? C.green : C.g3, margin: "6px auto 0" }} />
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
