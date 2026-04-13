@@ -115,7 +115,7 @@ function Icon({ name, active }) {
 
 // ─── ÉCRAN ACCUEIL ───────────────────────────────────
 
-function DashboardScreen({ sessions, nutrition, etat, onNavigate, onSaveEtat }) {
+function DashboardScreen({ sessions, planSessions, nutrition, etat, onNavigate, onSaveEtat }) {
   const [ressentiOpen, setRessentiOpen] = useState(false);
   const [fatigue, setFatigue] = useState(etat.fatigue || 5);
   const [motivation, setMotivation] = useState(etat.motivation || 5);
@@ -127,11 +127,22 @@ function DashboardScreen({ sessions, nutrition, etat, onNavigate, onSaveEtat }) 
   const mois = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
   const dateStr = `${joursSemaine[now.getDay()]} ${now.getDate()} ${mois[now.getMonth()]}`;
   
-  // Trouver la séance du jour par date (fuseau local, pas UTC)
+  // Trouver la séance du jour : d'abord dans Séance, puis dans Plan
   const todayDate = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
-  const todayIndex = sessions.findIndex(s => s.date === todayDate);
-  const today = todayIndex >= 0 ? sessions[todayIndex] : null;
-  const todayIdx = todayIndex >= 0 ? todayIndex : -1;
+  let todayIndex = sessions.findIndex(s => s.date === todayDate);
+  let today = todayIndex >= 0 ? sessions[todayIndex] : null;
+  let todayIdx = todayIndex >= 0 ? todayIndex : -1;
+  let todaySource = "seance";
+  
+  // Si pas trouvé dans Séance, chercher dans Plan
+  if (!today && planSessions && planSessions.length > 0) {
+    const planIndex = planSessions.findIndex(s => s.date === todayDate);
+    if (planIndex >= 0) {
+      today = planSessions[planIndex];
+      todayIdx = planIndex;
+      todaySource = "plan";
+    }
+  }
   return (
     <div style={{ padding: "0 20px 24px" }}>
       <div style={{ marginBottom: 24 }}>
@@ -1306,7 +1317,7 @@ export default function Home() {
   }
 
   const screens = [
-    <DashboardScreen key={0} sessions={sessions} nutrition={nutrition} etat={etat} onNavigate={handleNavigate} onSaveEtat={handleSaveEtat} />,
+    <DashboardScreen key={0} sessions={sessions} planSessions={planSessions} nutrition={nutrition} etat={etat} onNavigate={handleNavigate} onSaveEtat={handleSaveEtat} />,
     <PlanScreen key={1} sessions={planSessions} initialSelected={planSelected} />,
     <NutritionScreen key={2} nutrition={nutrition} />,
     <BilanScreen key={3} sessions={sessions} etat={etat} bilan={bilan} />,
@@ -1325,22 +1336,17 @@ export default function Home() {
       </Head>
 
       <div style={{ maxWidth: 390, margin: "0 auto", background: C.bg, minHeight: "100vh", position: "relative" }}>
-        {/* Status bar */}
-        <div style={{ padding: "12px 20px 8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontSize: 14, fontWeight: 700, color: C.white }}>09:54</span>
-          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-            {!isLive && <span style={{ fontSize: 9, background: C.yellow+"33", color: C.yellow, padding: "2px 6px", borderRadius: 4, fontWeight: 700 }}>DÉMO</span>}
-            {isLive && <span style={{ fontSize: 9, background: C.green+"33", color: C.green, padding: "2px 6px", borderRadius: 4, fontWeight: 700 }}>LIVE</span>}
-          </div>
-        </div>
-
         {/* Header */}
-        <div style={{ padding: "8px 20px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ padding: "16px 20px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ width: 36, height: 36, borderRadius: 10, background: `linear-gradient(135deg,${C.accent},#8B1A10)`, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <span style={{ fontSize: 16, fontWeight: 900, color: "#fff", fontFamily: "'Bebas Neue',sans-serif" }}>SI</span>
             </div>
             <p style={{ fontSize: 10, color: C.g2, margin: 0, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1.5 }}>Spartan Intelligence</p>
+          </div>
+          <div>
+            {!isLive && <span style={{ fontSize: 9, background: C.yellow+"33", color: C.yellow, padding: "2px 6px", borderRadius: 4, fontWeight: 700 }}>DÉMO</span>}
+            {isLive && <span style={{ fontSize: 9, background: C.green+"33", color: C.green, padding: "2px 6px", borderRadius: 4, fontWeight: 700 }}>LIVE</span>}
           </div>
         </div>
 
